@@ -64,14 +64,14 @@ getgenv().gethui = function()
 	return game:GetService("CoreGui")
 end
 
-getgenv().FrostByteConnections = getgenv().FrostByteConnections or {}
+getgenv().Xenon = getgenv().Xenon or {}
 
 function HandleConnection(Connection: RBXScriptConnection, Name: string)
-	if getgenv().FrostByteConnections[Name] then
-		getgenv().FrostByteConnections[Name]:Disconnect()
+	if getgenv().Xenon[Name] then
+		getgenv().Xenon[Name]:Disconnect()
 	end
 
-	getgenv().FrostByteConnections[Name] = Connection
+	getgenv().Xenon[Name] = Connection
 end
 
 firesignal = getfenv().firesignal:: (RBXScriptSignal) -> ()
@@ -87,7 +87,7 @@ Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/XenonLoade
 Flags = Rayfield.Flags
 
 Window = Rayfield:CreateWindow({
-	Name = `FrostByte | {PlaceName} | {ScriptVersion}`,
+	Name = `Xenon | {PlaceName} | {ScriptVersion}`,
 	Icon = "snowflake",
 	LoadingTitle = "❄ Brought to you by Xenon ❄",
 	LoadingSubtitle = PlaceName,
@@ -99,7 +99,7 @@ Window = Rayfield:CreateWindow({
 	ConfigurationSaving = {
 		Enabled = true,
 		FolderName = nil,
-		FileName = `FrostByte-{game.PlaceId}`
+		FileName = `Xenon-{game.PlaceId}`
 	},
 
 	Discord = {
