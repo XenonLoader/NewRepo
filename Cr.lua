@@ -89,7 +89,7 @@ Flags = Rayfield.Flags
 Window = Rayfield:CreateWindow({
 	Name = `Xenon | {PlaceName} | {ScriptVersion}`,
 	Icon = "snowflake",
-	LoadingTitle = "❄ Brought to you by Xenon ❄",
+	LoadingTitle = "🆓 • by Xenon",
 	LoadingSubtitle = PlaceName,
 	Theme = "DarkBlue",
 
