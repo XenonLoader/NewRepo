@@ -88,7 +88,7 @@ Flags = Rayfield.Flags
 
 Window = Rayfield:CreateWindow({
 	Name = `Xenon | {PlaceName} | {ScriptVersion}`,
-	Icon = "fire",
+	Icon = "dna-off",
 	LoadingTitle = "🆓 • by Xenon",
 	LoadingSubtitle = PlaceName,
 	Theme = "DarkBlue",
