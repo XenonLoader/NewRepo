@@ -1,4 +1,4 @@
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/alyssagithub/Scripts/refs/heads/main/FrostByte/Initialize.lua"))()
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Initialize.lua"))()
 
 local function Notify(Text)
 	game:GetService("StarterGui"):SetCore("SendNotification", {
