@@ -2,7 +2,7 @@
 
 local function Notify(Text)
 	game:GetService("StarterGui"):SetCore("SendNotification", {
-		Title = "FrostByte Notification",
+		Title = "Xenon Notification",
 		Text = Text,
 		Duration = 10
 	})
