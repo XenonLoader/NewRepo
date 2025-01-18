@@ -8,17 +8,17 @@ local function Notify(Text)
 	})
 end
 
-local PlaceName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+-- local PlaceName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 
-if PlaceName:find("]") then
-	PlaceName = PlaceName:split("]")[2]
-end
+-- if PlaceName:find("]") then
+-- 	PlaceName = PlaceName:split("]")[2]
+-- end
 
-if PlaceName:find(")") then
-	PlaceName = PlaceName:split(")")[2]
-end
+-- if PlaceName:find(")") then
+-- 	PlaceName = PlaceName:split(")")[2]
+-- end
 
-PlaceName = PlaceName:gsub("[^%a]", "")
+-- PlaceName = PlaceName:gsub("[^%a]", "")
 
 local Code = game:HttpGet(`https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceName}.lua`)
 
