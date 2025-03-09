@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Enhanced LuArmor Bypass
 // @namespace    http://tampermonkey.net/
-// @version      2.5
+// @version      2.6
 // @description  Advanced LuArmor bypass with improved accuracy, reliability, and modern UI
-// @author       Bolt
+// @author       Xenon
 // @match        https://ads.luarmor.net/*
 // @match        https://linkvertise.com/*
 // @match        https://*/s?*
@@ -34,13 +34,15 @@
             height: 100%;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             z-index: 2147483647;
             font-family: system-ui, -apple-system, sans-serif;
             opacity: 0;
             transition: opacity 0.3s ease;
-            padding: 1rem;
+            padding: 0.5rem;
             box-sizing: border-box;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .bolt-container {
@@ -54,41 +56,77 @@
             transition: all 0.3s ease;
             animation: slideIn 0.3s ease forwards;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            margin: 1rem auto;
         }
 
         @media (max-width: 480px) {
+            .bolt-overlay {
+                padding: 0;
+                align-items: flex-start;
+            }
+
             .bolt-container {
                 padding: 1rem;
-                border-radius: 15px;
-                margin: 0.5rem;
+                border-radius: 0;
+                margin: 0;
+                min-height: 100%;
             }
 
             .bolt-title {
-                font-size: 1.125rem !important;
+                font-size: 1.25rem !important;
+                margin-bottom: 1.5rem !important;
             }
 
             .bolt-button {
-                padding: 0.75rem 1.5rem !important;
-                font-size: 0.875rem !important;
+                padding: 1rem !important;
+                font-size: 1rem !important;
+                margin-top: 0.75rem !important;
+                height: auto !important;
+                border-radius: 8px !important;
             }
 
             .bolt-key-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
             }
 
             .bolt-key-item > div {
-                width: 100%;
+                margin-top: 0.5rem;
                 display: flex;
-                justify-content: space-between;
+                justify-content: flex-start;
                 align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .bolt-key-text {
+                font-size: 0.875rem !important;
+                width: 100%;
+                word-break: break-all;
+            }
+
+            .bolt-renew-btn {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.875rem !important;
+                border-radius: 6px !important;
+                margin: 0 !important;
             }
 
             .bolt-checkpoint {
-                padding: 0.5rem !important;
-                font-size: 0.875rem !important;
+                padding: 1rem !important;
+                font-size: 1rem !important;
+                margin-bottom: 0.5rem !important;
+                border-radius: 8px !important;
+            }
+
+            .bolt-keys {
+                margin: 1rem -1rem;
+                padding: 1rem;
+                border-radius: 0;
+                background: rgba(0, 0, 0, 0.2);
             }
         }
 
@@ -105,6 +143,10 @@
             margin-top: 1rem;
             transition: all 0.2s ease;
             -webkit-tap-highlight-color: transparent;
+            height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .bolt-button:hover {
@@ -133,6 +175,7 @@
             bottom: 1rem;
             right: 1rem;
             max-width: none;
+            margin: 0;
         }
 
         .bolt-container.minimized .bolt-checkpoints,
@@ -170,6 +213,7 @@
             width: 32px;
             height: 32px;
             -webkit-tap-highlight-color: transparent;
+            z-index: 10;
         }
 
         .bolt-toggle:hover {
@@ -194,21 +238,24 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 1rem;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
 
         .bolt-key-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
+            flex-direction: column;
+            padding: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             color: #e5e7eb;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
         }
 
         .bolt-key-item:last-child {
+            margin-bottom: 0;
             border-bottom: none;
         }
 
@@ -216,14 +263,15 @@
             font-family: monospace;
             font-size: 0.875rem;
             word-break: break-all;
+            margin-bottom: 0.5rem;
         }
 
         .bolt-key-status {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            margin-left: 0.5rem;
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
             white-space: nowrap;
+            font-weight: 500;
         }
 
         .bolt-key-status.expired {
@@ -240,11 +288,11 @@
             background: #eab308;
             color: white;
             border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
             cursor: pointer;
-            margin-left: 0.5rem;
             transition: all 0.2s ease;
             white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
@@ -466,7 +514,7 @@
                     <div class="bolt-progress-text" id="adProgress"></div>
                     <div class="bolt-buttons">
                         <button class="bolt-button" id="startBypass">Start Bypass</button>
-                        <button class="bolt-button secondary" id="renewKey">Renew Key</button>
+                        <button class="bolt-button secondary" id="renewKey">Show Keys</button>
                     </div>
                     <div class="bolt-keys" id="boltKeys"></div>
                     <div class="bolt-checkpoints">
@@ -498,6 +546,7 @@
             const renewBtn = this.overlay.querySelector('#renewKey');
             const checkpoints = this.overlay.querySelector('.bolt-checkpoints');
             const progressContainer = this.overlay.querySelector('.bolt-progress-container');
+            const keysContainer = this.overlay.querySelector('.bolt-keys');
 
             toggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -514,18 +563,22 @@
 
             startBtn.addEventListener('click', () => {
                 this.overlay.querySelector('.bolt-buttons').style.display = 'none';
+                keysContainer.style.display = 'none';
                 checkpoints.style.display = 'flex';
                 progressContainer.style.display = 'block';
                 this.startBypass();
             });
 
             renewBtn.addEventListener('click', () => {
+                keysContainer.style.display = keysContainer.style.display === 'none' ? 'block' : 'none';
                 this.updateKeyList();
             });
 
+            // Hide keys container initially
+            keysContainer.style.display = 'none';
+
             // Start progress monitoring
             this.monitorProgress();
-            this.updateKeyList();
 
             requestAnimationFrame(() => {
                 this.overlay.style.opacity = '1';
@@ -564,7 +617,7 @@
                     <div>
                         <span class="bolt-key-status ${key.status}">${key.status}</span>
                         ${key.status === 'expired' && key.keyId ? 
-                            `<button class="bolt-renew-btn" onclick="renewKey('${key.keyId}')">Renew</button>` : 
+                            `<button class="bolt-renew-btn" onclick="renewKey('${key.keyId}')">Renew Key</button>` : 
                             ''
                         }
                     </div>
