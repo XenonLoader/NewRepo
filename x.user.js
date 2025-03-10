@@ -17,8 +17,6 @@
 // @grant        GM_addStyle
 // @grant        unsafeWindow
 // @run-at       document-start
-// @connect      solar-bypass-ui-25.lovable.app
-// @connect      ctofxskjyxaxduwkznoz.supabase.co
 // @connect      api.bypass.bot
 // @connect      api.solar-x.top
 // @connect      xenonhub.xyz
