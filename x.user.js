@@ -27,7 +27,6 @@
 
   GM_addStyle(`
       .bolt-overlay {
-      background: rgb(21, 41, 55);
           position: fixed;
           top: 0;
           left: 0;
