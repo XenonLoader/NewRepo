@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2.8
 // @description  Advanced LuArmor bypass with improved accuracy, reliability, and modern UI
-// @author       Bolt
+// @author       Xenon
 // @match        https://ads.luarmor.net/*
 // @match        https://linkvertise.com/*
 // @match        https://*/s?*
