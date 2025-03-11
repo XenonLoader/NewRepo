@@ -271,24 +271,6 @@ Tab:CreateSection("📝 Changelog")
 
 Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = getgenv().Changelog or "Changelog Not Found"})
 
-Tab:CreateSection("🛠️ Developer Mode")
-
-Tab:CreateParagraph({
-    Title = "How to Use Dev Mode",
-    Content = [[
-1. Before loading the script:
-   • Set Version: getgenv().ScriptVersion = "v1.0.0-dev"
-   • Enable Dev Mode: getgenv().DevMode = true
-
-2. Features Available in Dev Mode:
-   • Detailed debugging information
-   • Performance monitoring
-   • Test features access
-   • Extended configuration options
-
-3. Load the script normally after setting up]]
-})
-
 getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
     if not Features[FeatureName] then
         return warn(`The feature '{FeatureName}' does not exist in the Features.`)
