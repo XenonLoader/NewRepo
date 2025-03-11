@@ -30,14 +30,14 @@ getgenv().gethui = function()
 	return game:GetService("CoreGui")
 end
 
-getgenv().FrostByteConnections = getgenv().FrostByteConnections or {}
+getgenv().XenonConnections = getgenv().XenonConnections or {}
 
 local function HandleConnection(Connection: RBXScriptConnection, Name: string)
-	if getgenv().FrostByteConnections[Name] then
-		getgenv().FrostByteConnections[Name]:Disconnect()
+	if getgenv().XenonConnections[Name] then
+		getgenv().XenonConnections[Name]:Disconnect()
 	end
 
-	getgenv().FrostByteConnections[Name] = Connection
+	getgenv().XenonConnections[Name] = Connection
 end
 
 getgenv().HandleConnection = HandleConnection
@@ -120,7 +120,7 @@ if getgenv().RayfieldTesting then
 else
 	repeat
 		pcall(function()
-			Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/alyssagithub/Scripts/refs/heads/main/FrostByte/Rayfield.luau"))()
+			Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Rayfield.luau"))()
 		end)
 		task.wait()
 	until Rayfield
@@ -175,7 +175,7 @@ task.spawn(function()
 		local Button1 = "✅ Yes" 
 		local Button2 = "❌ No"
 
-		local File = `https://raw.githubusercontent.com/alyssagithub/Scripts/refs/heads/main/FrostByte/Games/{PlaceFileName}.lua`
+		local File = `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceFileName}.lua`
 
 		BindableFunction.OnInvoke = function(Button: string)
 			Response = true
@@ -199,7 +199,7 @@ task.spawn(function()
 				continue
 			end
 
-			SendNotification(`A new FrostByte version {Result} has been detected!`, "Would you like to load it?", math.huge, Button1, Button2, BindableFunction)
+			SendNotification(`A new Xenon version {Result} has been detected!`, "Would you like to load it?", math.huge, Button1, Button2, BindableFunction)
 
 			break
 		end
@@ -222,9 +222,9 @@ type Tab = {
 }
 
 local Window = Rayfield:CreateWindow({
-	Name = `FrostByte | {PlaceName} | {ScriptVersion or "Dev Mode"}`,
+	Name = `Xenon | {PlaceName} | {ScriptVersion or "Dev Mode"}`,
 	Icon = "snowflake",
-	LoadingTitle = "❄ Brought to you by FrostByte ❄",
+	LoadingTitle = "❄ Brought to you by Xenon ❄",
 	LoadingSubtitle = PlaceName,
 	Theme = "DarkBlue",
 
@@ -233,7 +233,7 @@ local Window = Rayfield:CreateWindow({
 
 	ConfigurationSaving = {
 		Enabled = true,
-		FolderName = "FrostByte",
+		FolderName = "Xenon",
 		FileName = `{getgenv().PlaceFileName or `DevMode-{game.PlaceId}`}-{Player.Name}`
 	},
 
@@ -416,7 +416,7 @@ local Features = {
 			Element = "Input",
 			Info = {
 				Name = "💬 • Name To Replace With",
-				CurrentValue = "FrostByte",
+				CurrentValue = "Xenon",
 				PlaceholderText = "New Name Here",
 				RemoveTextAfterFocusLost = false,
 				Flag = "NameReplacement",
@@ -450,13 +450,13 @@ getgenv().CreateUniversalTabs = function()
 		FlagInfo:Set(CurrentValue)
 	end
 
-	Notify("Welcome to FrostByte", `Loaded in {math.floor((tick() - StartLoadTime) * 10) / 10}s`, "loader-circle")
+	Notify("Welcome to Xenon", `Loaded in {math.floor((tick() - StartLoadTime) * 10) / 10}s`, "loader-circle")
 end
 
-local FrostByteStarted = getgenv().FrostByteStarted
+local XenonStarted = getgenv().XenonStarted
 
-if FrostByteStarted then
-	FrostByteStarted()
+if XenonStarted then
+	XenonStarted()
 end
 
 --[[function CreateUniversalTabs()
@@ -470,7 +470,7 @@ end
 	Tab:CreateSection("Discord")
 
 	Tab:CreateButton({
-		Name = "❄ • Join the FrostByte Discord!",
+		Name = "❄ • Join the Xenon Discord!",
 		Callback = function()
 			if request then
 				request({
@@ -703,7 +703,7 @@ end
 			return
 		end
 
-		Player:Kick(`The player '{CheckPlayer.Name}' was detected to be a staff member, their role is '{StaffRole}'.\n\nIf you believe this is false, contact the dev of FrostByte.`)
+		Player:Kick(`The player '{CheckPlayer.Name}' was detected to be a staff member, their role is '{StaffRole}'.\n\nIf you believe this is false, contact the dev of Xenon.`)
 	end
 
 	Tab:CreateToggle({
@@ -787,7 +787,7 @@ end
 
 	Tab:CreateInput({
 		Name = "💬 • Name To Replace With",
-		CurrentValue = "FrostByte",
+		CurrentValue = "Xenon",
 		PlaceholderText = "New Name Here",
 		RemoveTextAfterFocusLost = false,
 		Flag = "NameReplacement",
@@ -1009,7 +1009,7 @@ end
 	Tab:CreateButton({
 		Name = "⚙️ • Rejoin",
 		Callback = function()
-			TeleportService:Teleport(game.PlaceId, Player, {FrostByteRejoin = true})
+			TeleportService:Teleport(game.PlaceId, Player, {XenonRejoin = true})
 		end,
 	})
 end]]
