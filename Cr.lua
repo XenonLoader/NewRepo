@@ -239,7 +239,7 @@ local Window = Rayfield:CreateWindow({
 
 	Discord = {
 		Enabled = true,
-		Invite = "sS3tDP6FSB",
+		Invite = "cF8YeDPt2G",
 		RememberJoins = true
 	},
 })
@@ -250,7 +250,7 @@ local Tab: Tab = Window:CreateTab("Home", "snowflake")
 
 Tab:CreateSection("Join our Discord!")
 
-Tab:CreateLabel("discord.gg/sS3tDP6FSB", "messages-square")
+Tab:CreateLabel("discord.gg/cF8YeDPt2G", "messages-square")
 
 Tab:CreateSection("Performance")
 
@@ -483,19 +483,19 @@ end
 					Body = HttpService:JSONEncode({
 						cmd = 'INVITE_BROWSER',
 						nonce = HttpService:GenerateGUID(false),
-						args = {code = 'sS3tDP6FSB'}
+						args = {code = 'cF8YeDPt2G'}
 					})
 				})
 			elseif setclipboard then
-				setclipboard("https://discord.gg/sS3tDP6FSB")
+				setclipboard("https://discord.gg/cF8YeDPt2G")
 				Notify("Success!", "Copied Discord Link to Clipboard.")
 			end
 
-			Notify("Discord", "https://discord.gg/sS3tDP6FSB")
+			Notify("Discord", "https://discord.gg/cF8YeDPt2G")
 		end,
 	})
 
-	Tab:CreateLabel("https://discord.gg/sS3tDP6FSB", "link")
+	Tab:CreateLabel("https://discord.gg/cF8YeDPt2G", "link")
 
 	Tab:CreateSection("Statistics")
 
