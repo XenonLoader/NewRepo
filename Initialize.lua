@@ -1,5 +1,7 @@
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Initialize.lua"))()
 
+local getgenv: () -> ({[string]: any}) = getfenv().getgenv
+
 local function Notify(Text)
 	game:GetService("StarterGui"):SetCore("SendNotification", {
 		Title = "Xenon Notification",
@@ -8,23 +10,24 @@ local function Notify(Text)
 	})
 end
 
-local PlaceName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+local PlaceName = game:GetService("AssetService"):GetGamePlacesAsync(game.GameId):GetCurrentPage()[1].Name
 
-if PlaceName:find("]") then
-	PlaceName = PlaceName:split("]")[2]
-end
+getgenv().PlaceName = PlaceName
 
-if PlaceName:find(")") then
-	PlaceName = PlaceName:split(")")[2]
-end
-
+PlaceName = PlaceName:gsub("%b[]", "")
 PlaceName = PlaceName:gsub("[^%a]", "")
 
-local Code = game:HttpGet(`https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceName}.lua`)
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/alyssagithub/Scripts/refs/heads/main/FrostByte/Analytics.lua"))()
 
-if Code then
+local Success, Code: string = pcall(game.HttpGet, game, `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceName}.lua`)
+
+if Success and Code:find("ScriptVersion = ") then
 	Notify("Game found, the script is loading.")
-	loadstring(Code)()
+	getgenv().PlaceFileName = PlaceName
 else
-	Notify("Could not find a script for this game.")
+	Notify("Game not found, loading universal.")
+	getgenv().ScriptVersion = "Universal"
+	Code = game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Cr.lua")
 end
+
+getgenv().FrostByteHandleFunction(loadstring(Code))
