@@ -1,20 +1,15 @@
---[[
-
-	Rayfield Interface Suite
-	by Sirius
-
-	shlex | Designing + Programming
-	iRay  | Programming
-	Max   | Programming
-
-]]
-
 if debugX then
 	warn('Initialising Rayfield')
 end
 
+local function getService(name)
+	local service = game:GetService(name)
+	return if cloneref then cloneref(service) else service
+end
+
+local requestsDisabled = getgenv and getgenv().DISABLE_RAYFIELD_REQUESTS
 local InterfaceBuild = '3K3W'
-local Release = "Build 1.67"
+local Release = "Build 1.672"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
@@ -31,15 +26,15 @@ local settingsTable = {
 	}
 }
 
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
+local HttpService = getService('HttpService')
+local RunService = getService('RunService')
 
 -- Environment Check
 local useStudio = RunService:IsStudio() or false
 
 local settingsCreated = false
 local cachedSettings
-local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/prompt.lua'))()
+local prompt = useStudio and require(script.Parent.prompt) or loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua'))()
 local request = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 
@@ -47,47 +42,55 @@ local request = (syn and syn.request) or (fluxus and fluxus.request) or (http an
 local function loadSettings()
 	local file = nil
 
-	if isfolder and isfolder(RayfieldFolder) then
-		if isfile and isfile(RayfieldFolder..'/settings'..ConfigurationExtension) then
-			file = readfile(RayfieldFolder..'/settings'..ConfigurationExtension)
-		end
-	end
+	local success, result =	pcall(function()
+		task.spawn(function()
+			if isfolder and isfolder(RayfieldFolder) then
+				if isfile and isfile(RayfieldFolder..'/settings'..ConfigurationExtension) then
+					file = readfile(RayfieldFolder..'/settings'..ConfigurationExtension)
+				end
+			end
 
-	-- for debug in studio
-	if useStudio then
-		file = [[
-		{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
-	]]
-	end
-
-
-	if file then
-		local success, decodedFile = pcall(function() return HttpService:JSONDecode(file) end)
-		if success then
-			file = decodedFile
-		else
-			file = {}
-		end
-	else
-		file = {}
-	end
+			-- for debug in studio
+			if useStudio then
+				file = '{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}'
+			end
 
 
-	if not settingsCreated then 
-		cachedSettings = file
-		return
-	end
+			if file then
+				local success, decodedFile = pcall(function() return HttpService:JSONDecode(file) end)
+				if success then
+					file = decodedFile
+				else
+					file = {}
+				end
+			else
+				file = {}
+			end
 
-	if file ~= {} then
-		for categoryName, settingCategory in pairs(settingsTable) do
-			if file[categoryName] then
-				for settingName, setting in pairs(settingCategory) do
-					if file[categoryName][settingName] then
-						setting.Value = file[categoryName][settingName].Value
-						setting.Element:Set(setting.Value)
+
+			if not settingsCreated then 
+				cachedSettings = file
+				return
+			end
+
+			if file ~= {} then
+				for categoryName, settingCategory in pairs(settingsTable) do
+					if file[categoryName] then
+						for settingName, setting in pairs(settingCategory) do
+							if file[categoryName][settingName] then
+								setting.Value = file[categoryName][settingName].Value
+								setting.Element:Set(setting.Value)
+							end
+						end
 					end
 				end
 			end
+		end)
+	end)
+
+	if not success then 
+		if writefile then
+			warn('Rayfield had an issue accessing configuration saving capability.')
 		end
 	end
 end
@@ -102,59 +105,34 @@ if debugX then
 	warn('Settings Loaded')
 end
 
---if not cachedSettings or not cachedSettings.System or not cachedSettings.System.usageAnalytics then
---	local fileFunctionsAvailable = isfile and writefile and readfile
-
---	if not fileFunctionsAvailable and not useStudio then
---		warn('Rayfield Interface Suite | Sirius Analytics:\n\n\nAs you don\'t have file functionality with your executor, we are unable to save whether you want to opt in or out to analytics.\nIf you do not want to take part in anonymised usage statistics, let us know in our Discord at sirius.menu/discord and we will manually opt you out.')
---		analytics = true	
---	else
---		prompt.create(
---			'Help us improve',
---	            [[Would you like to allow Sirius to collect usage statistics?
-
---<font transparency='0.4'>No data is linked to you or your personal activity.</font>]],
---			'Continue',
---			'Cancel',
---			function(result)
---				settingsTable.System.usageAnalytics.Value = result
---				analytics = result
---			end
---		)
---	end
-
---	repeat task.wait() until analytics ~= nil
---end
-
-if debugX then
-	warn('Querying Settings for Reporter Information')
-end
-
-if #cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value) then
-	if useStudio then
-		print('Sending analytics')
-	else
-		if debugX then
-			warn('Reporting Analytics')
-		end
-		task.spawn(function()
-			local success, reporter = pcall(function()
-				return loadstring(game:HttpGet("https://analytics.sirius.menu/reporter"))()
-			end)
-
-			if success and reporter then
-				pcall(function()
-					reporter.report("0193dbf8-7da1-79de-b399-2c0f68b0a9ad", Release, InterfaceBuild)
+if not requestsDisabled then
+	if debugX then
+		warn('Querying Settings for Reporter Information')
+	end
+	local function sendReport()
+		if useStudio then
+			print('Sending Analytics')
+		else
+			if debugX then warn('Reporting Analytics') end
+			task.spawn(function()
+				local success, reporter = pcall(function()
+					return loadstring(game:HttpGet("https://analytics.sirius.menu/v1/reporter", true))()
 				end)
-			else
-				warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
-			end
-		end)
-		
-		if debugX then
-			warn('Finished Report')
+				if success and reporter then
+					pcall(function()
+						reporter.report("Rayfield", Release, InterfaceBuild)
+					end)
+				else
+					warn("Failed to load or execute the reporter. \nPlease notify Rayfield developers at sirius.menu/discord.")
+				end
+			end)
+			if debugX then warn('Finished Report') end
 		end
-
+	end
+	if cachedSettings and (#cachedSettings == 0 or (cachedSettings.System and cachedSettings.System.usageAnalytics and cachedSettings.System.usageAnalytics.Value)) then
+		sendReport()
+	elseif not cachedSettings then
+		sendReport()
 	end
 end
 
@@ -546,10 +524,10 @@ local RayfieldLibrary = {
 
 
 -- Services
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local UserInputService = getService("UserInputService")
+local TweenService = getService("TweenService")
+local Players = getService("Players")
+local CoreGui = getService("CoreGui")
 
 -- Interface Management
 
@@ -639,8 +617,7 @@ local dragOffsetMobile = 150
 Rayfield.DisplayOrder = 100
 LoadingFrame.Version.Text = Release
 
-
-local Icons = useStudio and require(script.Parent.icons) or loadstring(game:HttpGet('https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/icons.lua'))()
+-- Thanks to Latte Softworks for the Lucide integration for Roblox
 
 -- Variables
 
@@ -700,13 +677,30 @@ local function ChangeTheme(Theme)
 	end
 end
 
+local Icons
+
+repeat
+	pcall(function()
+		Icons = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua'))()
+	end)
+	task.wait()
+until Icons
+
 local function getIcon(name : string)
 	name = string.match(string.lower(name), "^%s*(.*)%s*$") :: string
 	local sizedicons = Icons['48px']
+	
+	if not sizedicons then
+		return {
+			id = 0,
+			imageRectSize = Vector2.zero,
+			imageRectOffset = Vector2.zero
+		}
+	end
 
 	local r = sizedicons[name]
 	if not r then
-		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\.", 2)
+		error(`Lucide Icons: Failed to find icon by the name of "{name}"`, 2)
 	end
 
 	local rirs = r[2]
@@ -735,7 +729,7 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local offset = Vector2.zero
 	local screenGui = object:FindFirstAncestorWhichIsA("ScreenGui")
 	if screenGui and screenGui.IgnoreGuiInset then
-		offset += game:GetService('GuiService'):GetGuiInset()
+		offset += getService('GuiService'):GetGuiInset()
 	end
 
 	local function connectFunctions()
@@ -806,7 +800,6 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	end)
 end
 
-
 local function PackColor(Color)
 	return {R = Color.R * 255, G = Color.G * 255, B = Color.B * 255}
 end    
@@ -818,7 +811,7 @@ end
 local function LoadConfiguration(Configuration)
 	local success, Data = pcall(function() return HttpService:JSONDecode(Configuration) end)
 	local changed
-	
+
 	if not success then warn('Rayfield had an issue decoding the configuration file, please try delete the file and reopen Rayfield.') return end
 
 	-- Iterate through current UI elements' flags
@@ -833,7 +826,7 @@ local function LoadConfiguration(Configuration)
 				else
 					if (Flag.CurrentValue or Flag.CurrentKeybind or Flag.CurrentOption or Flag.Color) ~= FlagValue then 
 						changed = true
-						Flag:Set(FlagValue) 	
+						Flag:Set(FlagValue)
 					end
 				end
 			end)
@@ -849,7 +842,7 @@ end
 
 local function SaveConfiguration()
 	if not CEnabled or not globalLoaded then return end
-	
+
 	if debugX then
 		print('Saving')
 	end
@@ -886,7 +879,7 @@ local function SaveConfiguration()
 		TextBox.Text = HttpService:JSONEncode(Data)
 		TextBox.ClearTextOnFocus = false
 	end
-	
+
 	if debugX then
 		warn(HttpService:JSONEncode(Data))
 	end
@@ -1205,7 +1198,6 @@ local function Maximise()
 	Debounce = false
 end
 
-
 local function Unhide()
 	Debounce = true
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1439,8 +1431,6 @@ local function createSettings(window)
 	updateSettings()
 end
 
-
-
 function RayfieldLibrary:CreateWindow(Settings)
 	if Rayfield:FindFirstChild('Loading') then
 		if getgenv and not getgenv().rayfieldCached then
@@ -1451,17 +1441,19 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Rayfield.Loading.Visible = false
 		end
 	end
-	
+
 	if getgenv then getgenv().rayfieldCached = true end
-	
+
 	if not correctBuild and not Settings.DisableBuildWarnings then
 		task.delay(3, 
 			function() 
 				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
 	end
+	
+	local Success, Result = pcall(isfolder, RayfieldFolder)
 
-	if isfolder and not isfolder(RayfieldFolder) then
+	if Success and not Result then
 		makefolder(RayfieldFolder)
 	end
 
@@ -1533,7 +1525,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				task.wait(math.random(180, 600))
 				RayfieldLibrary:Notify({
 					Title = "Rayfield Interface",
-					Content = "Xenon",
+					Content = "Enjoying this UI library? Find it at sirius.menu/discord",
 					Duration = 7,
 					Image = 4370033185,
 				})
@@ -1575,11 +1567,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	if Settings.Discord and not useStudio then
-		if isfolder and not isfolder(RayfieldFolder.."/Discord Invites") then
+		local Success, Result = pcall(isfolder, RayfieldFolder.."/Discord Invites")
+		
+		if Success and not Result then
 			makefolder(RayfieldFolder.."/Discord Invites")
 		end
+		
+		local Success, Result = pcall(isfile, RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension)
 
-		if isfile and not isfile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
+		if Success and not Result then
 			if request then
 				pcall(function()
 					request({
@@ -1599,7 +1595,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 
 			if Settings.Discord.RememberJoins then -- We do logic this way so if the developer changes this setting, the user still won't be prompted, only new users
-				writefile(RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension,"Rayfield RememberJoins is true for this invite, this invite will not ask you to join again")
+				pcall(writefile, `{RayfieldFolder}/Discord Invites/{Settings.Discord.Invite}{ConfigurationExtension}`, "Rayfield RememberJoins is true for this invite, this invite will not ask you to join again")
 			end
 		end
 	end
@@ -2470,7 +2466,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			Input.InputFrame.InputBox.FocusLost:Connect(function()
 				local Success, Response = pcall(function()
-					InputSettings.Callback(Input.InputFrame.InputBox.Text)
+					if InputSettings.Callback then
+						InputSettings.Callback(Input.InputFrame.InputBox.Text)
+					end
+					
 					InputSettings.CurrentValue = Input.InputFrame.InputBox.Text
 				end)
 
@@ -2510,11 +2509,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 			function InputSettings:Set(text)
 				Input.InputFrame.InputBox.Text = text
 				InputSettings.CurrentValue = text
-				
+
 				local Success, Response = pcall(function()
 					InputSettings.Callback(text)
 				end)
-				
+
 				if not InputSettings.Ext then
 					SaveConfiguration()
 				end
@@ -2536,6 +2535,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownSettings)
+			if Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled and DropdownSettings.Flag then
+				RayfieldLibrary.Flags[DropdownSettings.Flag] = DropdownSettings
+			end
+			
 			local Dropdown = Elements.Template.Dropdown:Clone()
 			if string.find(DropdownSettings.Name,"closed") then
 				Dropdown.Name = "Dropdown"
@@ -2644,6 +2647,28 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Dropdown.MouseLeave:Connect(function()
 				TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 			end)
+			
+			local function RunDropdownCallback()
+				local Success, Response = pcall(function()
+					if not DropdownSettings.Callback then
+						return
+					end
+
+					DropdownSettings.Callback(DropdownSettings.CurrentOption)
+				end)
+
+				if not Success then
+					TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
+					TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+					Dropdown.Title.Text = "Callback Error"
+					print("Rayfield | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
+					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					task.wait(0.5)
+					Dropdown.Title.Text = DropdownSettings.Name
+					TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+					TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
+				end
+			end
 
 			local function SetDropdownOptions()
 				for _, Option in ipairs(DropdownSettings.Options) do
@@ -2709,22 +2734,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 							Debounce = true
 						end
 
-
-						local Success, Response = pcall(function()
-							DropdownSettings.Callback(DropdownSettings.CurrentOption)
-						end)
-
-						if not Success then
-							TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-							TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-							Dropdown.Title.Text = "Callback Error"
-							print("Rayfield | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
-							warn('Check docs.sirius.menu for help with Rayfield specific development.')
-							task.wait(0.5)
-							Dropdown.Title.Text = DropdownSettings.Name
-							TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-							TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-						end
+						RunDropdownCallback()
 
 						for _, droption in ipairs(Dropdown.List:GetChildren()) do
 							if droption.ClassName == "Frame" and droption.Name ~= "Placeholder" and not table.find(DropdownSettings.CurrentOption, droption.Name) then
@@ -2756,26 +2766,27 @@ function RayfieldLibrary:CreateWindow(Settings)
 						DropdownOption.UIStroke.Color = SelectedTheme.ElementStroke
 					end)
 				end
-			end
-			SetDropdownOptions()
-
-			for _, droption in ipairs(Dropdown.List:GetChildren()) do
-				if droption.ClassName == "Frame" and droption.Name ~= "Placeholder" then
-					if not table.find(DropdownSettings.CurrentOption, droption.Name) then
-						droption.BackgroundColor3 = SelectedTheme.DropdownUnselected
-					else
-						droption.BackgroundColor3 = SelectedTheme.DropdownSelected
-					end
-
-					Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+				
+				for _, droption in ipairs(Dropdown.List:GetChildren()) do
+					if droption.ClassName == "Frame" and droption.Name ~= "Placeholder" then
 						if not table.find(DropdownSettings.CurrentOption, droption.Name) then
 							droption.BackgroundColor3 = SelectedTheme.DropdownUnselected
 						else
 							droption.BackgroundColor3 = SelectedTheme.DropdownSelected
 						end
-					end)
+
+						Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+							if not table.find(DropdownSettings.CurrentOption, droption.Name) then
+								droption.BackgroundColor3 = SelectedTheme.DropdownUnselected
+							else
+								droption.BackgroundColor3 = SelectedTheme.DropdownSelected
+							end
+						end)
+					end
 				end
 			end
+			
+			SetDropdownOptions()
 
 			function DropdownSettings:Set(NewOption)
 				DropdownSettings.CurrentOption = NewOption
@@ -2800,21 +2811,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Dropdown.Selected.Text = DropdownSettings.CurrentOption[1]
 				end
 
-
-				local Success, Response = pcall(function()
-					DropdownSettings.Callback(NewOption)
-				end)
-				if not Success then
-					TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-					TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-					Dropdown.Title.Text = "Callback Error"
-					print("Rayfield | "..DropdownSettings.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
-					Dropdown.Title.Text = DropdownSettings.Name
-					TweenService:Create(Dropdown, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-					TweenService:Create(Dropdown.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-				end
+				RunDropdownCallback()
 
 				for _, droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName == "Frame" and droption.Name ~= "Placeholder" then
@@ -2830,18 +2827,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			function DropdownSettings:Refresh(optionsTable: table) -- updates a dropdown with new options from optionsTable
 				DropdownSettings.Options = optionsTable
+				
 				for _, option in Dropdown.List:GetChildren() do
 					if option.ClassName == "Frame" and option.Name ~= "Placeholder" then
 						option:Destroy()
 					end
 				end
+				
 				SetDropdownOptions()
-			end
-
-			if Settings.ConfigurationSaving then
-				if Settings.ConfigurationSaving.Enabled and DropdownSettings.Flag then
-					RayfieldLibrary.Flags[DropdownSettings.Flag] = DropdownSettings
-				end
 			end
 
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
@@ -3025,6 +3018,44 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Toggle.MouseLeave:Connect(function()
 				TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 			end)
+			
+			local function RunToggleCallback()
+				local Success, Response = pcall(function()
+					if debugX then warn('Running toggle \''..ToggleSettings.Name..'\' (Interact)') end
+
+					local function RunCallbackFunction(CallbackName: string)
+						if not ToggleSettings[CallbackName] then
+							return
+						end
+
+						ToggleSettings[CallbackName](ToggleSettings.CurrentValue)
+					end
+
+					if ToggleSettings.Looped then
+						RunCallbackFunction("BeforeLoop")
+
+						while ToggleSettings.CurrentValue and task.wait() do
+							ToggleSettings.Callback()
+						end
+
+						RunCallbackFunction("AfterLoop")
+					else
+						RunCallbackFunction("Callback")
+					end
+				end)
+
+				if not Success then
+					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
+					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+					Toggle.Title.Text = "Callback Error"
+					print("Rayfield | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
+					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					task.wait(0.5)
+					Toggle.Title.Text = ToggleSettings.Name
+					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
+				end
+			end
 
 			Toggle.Interact.MouseButton1Click:Connect(function()
 				if ToggleSettings.CurrentValue == true then
@@ -3048,22 +3079,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()		
 				end
-
-				local Success, Response = pcall(function()
-					ToggleSettings.Callback(ToggleSettings.CurrentValue)
-				end)
-
-				if not Success then
-					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-					Toggle.Title.Text = "Callback Error"
-					print("Rayfield | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
-					Toggle.Title.Text = ToggleSettings.Name
-					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-				end
+				
+				RunToggleCallback()
 
 				if not ToggleSettings.Ext then
 					SaveConfiguration()
@@ -3097,21 +3114,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()	
 				end
 
-				local Success, Response = pcall(function()
-					ToggleSettings.Callback(ToggleSettings.CurrentValue)
-				end)
-
-				if not Success then
-					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-					Toggle.Title.Text = "Callback Error"
-					print("Rayfield | "..ToggleSettings.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
-					Toggle.Title.Text = ToggleSettings.Name
-					TweenService:Create(Toggle, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-					TweenService:Create(Toggle.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-				end
+				RunToggleCallback()
 
 				if not ToggleSettings.Ext then
 					SaveConfiguration()
@@ -3207,6 +3210,28 @@ function RayfieldLibrary:CreateWindow(Settings)
 					SLDragging = false 
 				end 
 			end)
+			
+			local function RunSliderCallback(NewValue)
+				local Success, Response = pcall(function()
+					if not SliderSettings.Callback then
+						return
+					end
+					
+					SliderSettings.Callback(NewValue)
+				end)
+				
+				if not Success then
+					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
+					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
+					Slider.Title.Text = "Callback Error"
+					print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
+					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					task.wait(0.5)
+					Slider.Title.Text = SliderSettings.Name
+					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
+					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
+				end
+			end
 
 			Slider.Main.Interact.MouseButton1Down:Connect(function(X)
 				local Current = Slider.Main.Progress.AbsolutePosition.X + Slider.Main.Progress.AbsoluteSize.X
@@ -3247,20 +3272,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 
 						if SliderSettings.CurrentValue ~= NewValue then
-							local Success, Response = pcall(function()
-								SliderSettings.Callback(NewValue)
-							end)
-							if not Success then
-								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-								Slider.Title.Text = "Callback Error"
-								print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-								warn('Check docs.sirius.menu for help with Rayfield specific development.')
-								task.wait(0.5)
-								Slider.Title.Text = SliderSettings.Name
-								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-								TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-							end
+							RunSliderCallback(NewValue)
 
 							SliderSettings.CurrentValue = NewValue
 							if not SliderSettings.Ext then
@@ -3280,21 +3292,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewVal + SliderSettings.Range[1]) / (SliderSettings.Range[2] - SliderSettings.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * (NewVal / (SliderSettings.Range[2] - SliderSettings.Range[1])) or 5, 1, 0)}):Play()
 				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderSettings.Suffix or "")
 
-				local Success, Response = pcall(function()
-					SliderSettings.Callback(NewVal)
-				end)
-
-				if not Success then
-					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
-					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-					Slider.Title.Text = "Callback Error"
-					print("Rayfield | "..SliderSettings.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
-					Slider.Title.Text = SliderSettings.Name
-					TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
-					TweenService:Create(Slider.UIStroke, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
-				end
+				RunSliderCallback(NewVal)
 
 				SliderSettings.CurrentValue = NewVal
 				if not SliderSettings.Ext then
@@ -3397,7 +3395,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 	end
 
-	createSettings(Window)
+	local success, result = pcall(function()
+		createSettings(Window)
+	end)
+
+	if not success then warn('Rayfield had an issue creating settings.') end
+
 	return Window
 end
 
@@ -3420,6 +3423,7 @@ function RayfieldLibrary:IsVisible(): boolean
 	return not Hidden
 end
 
+local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function RayfieldLibrary:Destroy()
 	hideHotkeyConnection:Disconnect()
 	Rayfield:Destroy()
@@ -3554,13 +3558,13 @@ end
 
 function RayfieldLibrary:LoadConfiguration()
 	local config
-	
+
 	if debugX then
 		warn('Loading Configuration')
 	end
 
 	if useStudio then
-		config = [[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
+		config = '{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}'
 	end
 
 	if CEnabled then
@@ -3594,218 +3598,6 @@ function RayfieldLibrary:LoadConfiguration()
 	globalLoaded = true
 end
 
-
-
-if useStudio then
-	-- run w/ studio
-	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
-
-
-	local Window = RayfieldLibrary:CreateWindow({
-		Name = "Rayfield Example Window",
-		LoadingTitle = "Rayfield Interface Suite",
-		Theme = 'Default',
-		Icon = 0,
-		LoadingSubtitle = "by Sirius",
-		ConfigurationSaving = {
-			Enabled = true,
-			FolderName = nil, -- Create a custom folder for your hub/game
-			FileName = "Big Hub52"
-		},
-		Discord = {
-			Enabled = false,
-			Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
-			RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-		},
-		KeySystem = false, -- Set this to true to use our key system
-		KeySettings = {
-			Title = "Untitled",
-			Subtitle = "Key System",
-			Note = "No method of obtaining the key is provided",
-			FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-			SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-			GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-			Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-		}
-	})
-
-	local Tab = Window:CreateTab("Tab Example", 'key-round') -- Title, Image
-	local Tab2 = Window:CreateTab("Tab Example 2", 4483362458) -- Title, Image
-
-	local Section = Tab2:CreateSection("Section")
-
-
-	local ColorPicker = Tab2:CreateColorPicker({
-		Name = "Color Picker",
-		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicfsefker1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place every time the color picker is moved/changed
-			-- The variable (Value) is a Color3fromRGB value based on which color is selected
-		end
-	})
-
-	local Slider = Tab2:CreateSlider({
-		Name = "Slider Example",
-		Range = {0, 100},
-		Increment = 10,
-		Suffix = "Bananas",
-		CurrentValue = 40,
-		Flag = "Slidefefsr1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the slider changes
-			-- The variable (Value) is a number which correlates to the value the slider is currently at
-		end,
-	})
-
-	local Input = Tab2:CreateInput({
-		Name = "Input Example",
-		CurrentValue = '',
-		PlaceholderText = "Input Placeholder",
-		Flag = 'dawdawd',
-		RemoveTextAfterFocusLost = false,
-		Callback = function(Text)
-			-- The function that takes place when the input is changed
-			-- The variable (Text) is a string for the value in the text box
-		end,
-	})
-
-
-	--RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
-
-	local Section = Tab:CreateSection("Section Example")
-
-	local Button = Tab:CreateButton({
-		Name = "Change Theme",
-		Callback = function()
-			-- The function that takes place when the button is pressed
-			Window.ModifyTheme('DarkBlue')
-		end,
-	})
-
-	local Toggle = Tab:CreateToggle({
-		Name = "Toggle Example",
-		CurrentValue = false,
-		Flag = "Toggle1adwawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the toggle is pressed
-			-- The variable (Value) is a boolean on whether the toggle is true or false
-		end,
-	})
-
-	local ColorPicker = Tab:CreateColorPicker({
-		Name = "Color Picker",
-		Color = Color3.fromRGB(255,255,255),
-		Flag = "ColorPicker1awd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place every time the color picker is moved/changed
-			-- The variable (Value) is a Color3fromRGB value based on which color is selected
-		end
-	})
-
-	local Slider = Tab:CreateSlider({
-		Name = "Slider Example",
-		Range = {0, 100},
-		Increment = 10,
-		Suffix = "Bananas",
-		CurrentValue = 40,
-		Flag = "Slider1dawd", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Value)
-			-- The function that takes place when the slider changes
-			-- The variable (Value) is a number which correlates to the value the slider is currently at
-		end,
-	})
-
-	local Input = Tab:CreateInput({
-		Name = "Input Example",
-		CurrentValue = "Helo",
-		PlaceholderText = "Adaptive Input",
-		RemoveTextAfterFocusLost = false,
-		Flag = 'Input1',
-		Callback = function(Text)
-			-- The function that takes place when the input is changed
-			-- The variable (Text) is a string for the value in the text box
-		end,
-	})
-
-	local thoptions = {}
-	for themename, theme in pairs(RayfieldLibrary.Theme) do
-		table.insert(thoptions, themename)
-	end
-
-	local Dropdown = Tab:CreateDropdown({
-		Name = "Theme",
-		Options = thoptions,
-		CurrentOption = {"Default"},
-		MultipleOptions = false,
-		Flag = "Dropdown1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Options)
-			--Window.ModifyTheme(Options[1])
-			-- The function that takes place when the selected option is changed
-			-- The variable (Options) is a table of strings for the current selected options
-		end,
-	})
-
-
-	--Window.ModifyTheme({
-	--	TextColor = Color3.fromRGB(50, 55, 60),
-	--	Background = Color3.fromRGB(240, 245, 250),
-	--	Topbar = Color3.fromRGB(215, 225, 235),
-	--	Shadow = Color3.fromRGB(200, 210, 220),
-
-	--	NotificationBackground = Color3.fromRGB(210, 220, 230),
-	--	NotificationActionsBackground = Color3.fromRGB(225, 230, 240),
-
-	--	TabBackground = Color3.fromRGB(200, 210, 220),
-	--	TabStroke = Color3.fromRGB(180, 190, 200),
-	--	TabBackgroundSelected = Color3.fromRGB(175, 185, 200),
-	--	TabTextColor = Color3.fromRGB(50, 55, 60),
-	--	SelectedTabTextColor = Color3.fromRGB(30, 35, 40),
-
-	--	ElementBackground = Color3.fromRGB(210, 220, 230),
-	--	ElementBackgroundHover = Color3.fromRGB(220, 230, 240),
-	--	SecondaryElementBackground = Color3.fromRGB(200, 210, 220),
-	--	ElementStroke = Color3.fromRGB(190, 200, 210),
-	--	SecondaryElementStroke = Color3.fromRGB(180, 190, 200),
-
-	--	SliderBackground = Color3.fromRGB(200, 220, 235),  -- Lighter shade
-	--	SliderProgress = Color3.fromRGB(70, 130, 180),
-	--	SliderStroke = Color3.fromRGB(150, 180, 220),
-
-	--	ToggleBackground = Color3.fromRGB(210, 220, 230),
-	--	ToggleEnabled = Color3.fromRGB(70, 160, 210),
-	--	ToggleDisabled = Color3.fromRGB(180, 180, 180),
-	--	ToggleEnabledStroke = Color3.fromRGB(60, 150, 200),
-	--	ToggleDisabledStroke = Color3.fromRGB(140, 140, 140),
-	--	ToggleEnabledOuterStroke = Color3.fromRGB(100, 120, 140),
-	--	ToggleDisabledOuterStroke = Color3.fromRGB(120, 120, 130),
-
-	--	DropdownSelected = Color3.fromRGB(220, 230, 240),
-	--	DropdownUnselected = Color3.fromRGB(200, 210, 220),
-
-	--	InputBackground = Color3.fromRGB(220, 230, 240),
-	--	InputStroke = Color3.fromRGB(180, 190, 200),
-	--	PlaceholderColor = Color3.fromRGB(150, 150, 150)
-	--})
-
-	local Keybind = Tab:CreateKeybind({
-		Name = "Keybind Example",
-		CurrentKeybind = "Q",
-		HoldToInteract = false,
-		Flag = "Keybind1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-		Callback = function(Keybind)
-			-- The function that takes place when the keybind is pressed
-			-- The variable (Keybind) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
-		end,
-	})
-
-	local Label = Tab:CreateLabel("Label Example")
-
-	local Label2 = Tab:CreateLabel("Warning", 4483362458, Color3.fromRGB(255, 159, 49),  true)
-
-	local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
-end
-
 if CEnabled and Main:FindFirstChild('Notice') then
 	Main.Notice.BackgroundTransparency = 1
 	Main.Notice.Title.TextTransparency = 1
@@ -3820,7 +3612,7 @@ end
 
 if not useStudio then
 	local success, result = pcall(function()
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/boost.lua'))()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/boost.lua'))()
 	end)
 
 	if not success then
@@ -3828,16 +3620,5 @@ if not useStudio then
 		print(result)
 	end
 end
-
-task.delay(4, function() 
-	RayfieldLibrary.LoadConfiguration()
-	if Main:FindFirstChild('Notice') and Main.Notice.Visible then 
-		TweenService:Create(Main.Notice, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 100, 0, 25), Position = UDim2.new(0.5, 0, 0, -100), BackgroundTransparency = 1}):Play()
-		TweenService:Create(Main.Notice.Title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-
-		task.wait(0.5)
-		Main.Notice.Visible = false 
-	end
-end)
 
 return RayfieldLibrary
