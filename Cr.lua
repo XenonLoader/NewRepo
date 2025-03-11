@@ -21,76 +21,76 @@ local setclipboard: (Text: string) -> () = getfenv().setclipboard
 local firesignal: (RBXScriptSignal) -> () = getfenv().firesignal
 
 if not getgenv().ScriptVersion then
-	getgenv().ScriptVersion = "Dev Mode"
+    getgenv().ScriptVersion = "Dev Mode"
 end
 
 local ScriptVersion = getgenv().ScriptVersion
 
 getgenv().gethui = function()
-	return game:GetService("CoreGui")
+    return game:GetService("CoreGui")
 end
 
 getgenv().XenonConnections = getgenv().XenonConnections or {}
 
 local function HandleConnection(Connection: RBXScriptConnection, Name: string)
-	if getgenv().XenonConnections[Name] then
-		getgenv().XenonConnections[Name]:Disconnect()
-	end
+    if getgenv().XenonConnections[Name] then
+        getgenv().XenonConnections[Name]:Disconnect()
+    end
 
-	getgenv().XenonConnections[Name] = Connection
+    getgenv().XenonConnections[Name] = Connection
 end
 
 getgenv().HandleConnection = HandleConnection
 
 getgenv().GetClosestChild = function(Children: {PVInstance}, Callback: ((Child: PVInstance) -> boolean)?, MaxDistance: number?)
-	local Character = Player.Character
+    local Character = Player.Character
 
-	if not Character then
-		return
-	end
+    if not Character then
+        return
+    end
 
-	local HumanoidRootPart: Part = Character:FindFirstChild("HumanoidRootPart")
+    local HumanoidRootPart: Part = Character:FindFirstChild("HumanoidRootPart")
 
-	if not HumanoidRootPart then
-		return
-	end
+    if not HumanoidRootPart then
+        return
+    end
 
-	local CurrentPosition: Vector3 = HumanoidRootPart.Position
+    local CurrentPosition: Vector3 = HumanoidRootPart.Position
 
-	local ClosestMagnitude = MaxDistance or math.huge
-	local ClosestChild
+    local ClosestMagnitude = MaxDistance or math.huge
+    local ClosestChild
 
-	for _, Child in Children do
-		if not Child:IsA("PVInstance") then
-			continue
-		end
+    for _, Child in Children do
+        if not Child:IsA("PVInstance") then
+            continue
+        end
 
-		if Callback and Callback(Child) then
-			continue
-		end
+        if Callback and Callback(Child) then
+            continue
+        end
 
-		local Magnitude = (Child:GetPivot().Position - CurrentPosition).Magnitude
+        local Magnitude = (Child:GetPivot().Position - CurrentPosition).Magnitude
 
-		if Magnitude < ClosestMagnitude then
-			ClosestMagnitude = Magnitude
-			ClosestChild = Child
-		end
-	end
+        if Magnitude < ClosestMagnitude then
+            ClosestMagnitude = Magnitude
+            ClosestChild = Child
+        end
+    end
 
-	return ClosestChild
+    return ClosestChild
 end
 
 if not firesignal and getconnections then
-	firesignal = function(Signal: RBXScriptSignal)
-		local Connections = getconnections(Signal)
-		Connections[#Connections]:Fire()
-	end
+    firesignal = function(Signal: RBXScriptSignal)
+        local Connections = getconnections(Signal)
+        Connections[#Connections]:Fire()
+    end
 end
 
 local UnsupportedName = " (Executor Unsupported)"
 
 local function ApplyUnsupportedName(Name: string, Condition: boolean)
-	return Name..if Condition then "" else UnsupportedName
+    return Name..if Condition then "" else UnsupportedName
 end
 
 getgenv().ApplyUnsupportedName = ApplyUnsupportedName
@@ -98,45 +98,45 @@ getgenv().ApplyUnsupportedName = ApplyUnsupportedName
 local OriginalFlags = {}
 
 if getgenv().Flags then
-	for FlagName: string, FlagInfo in getgenv().Flags do
-		if typeof(FlagInfo.CurrentValue) ~= "boolean" then
-			continue
-		end
+    for FlagName: string, FlagInfo in getgenv().Flags do
+        if typeof(FlagInfo.CurrentValue) ~= "boolean" then
+            continue
+        end
 
-		OriginalFlags[FlagName] = FlagInfo.CurrentValue
-		FlagInfo:Set(false)
-	end
+        OriginalFlags[FlagName] = FlagInfo.CurrentValue
+        FlagInfo:Set(false)
+    end
 end
 
 if getgenv().Rayfield then
-	getgenv().Rayfield:Destroy()
+    getgenv().Rayfield:Destroy()
 end
 
 local Rayfield
 
 if getgenv().RayfieldTesting then
-	Rayfield = loadstring(getgenv().RayfieldTesting)()
-	print("Running Rayfield Testing")
+    Rayfield = loadstring(getgenv().RayfieldTesting)()
+    print("Running Rayfield Testing")
 else
-	repeat
-		pcall(function()
-			Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Rayfield.luau"))()
-		end)
-		task.wait()
-	until Rayfield
+    repeat
+        pcall(function()
+            Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/XenonLoader/NewRepo/refs/heads/main/Rayfield.luau"))()
+        end)
+        task.wait()
+    until Rayfield
 end
 
 getgenv().Initiated = nil
 
 local function SendNotification(Title: string, Text: string, Duration: number?, Button1: string?, Button2: string?, Callback: BindableFunction?)
-	StarterGui:SetCore("SendNotification", {
-		Title = Title,
-		Text = Text,
-		Duration = Duration or 10,
-		Button1 = Button1,
-		Button2 = Button2,
-		Callback = Callback
-	})
+    StarterGui:SetCore("SendNotification", {
+        Title = Title,
+        Text = Text,
+        Duration = Duration or 10,
+        Button1 = Button1,
+        Button2 = Button2,
+        Callback = Callback
+    })
 end
 
 local Flags: {[string]: {["CurrentValue"]: any, ["CurrentOption"]: {string}}} = Rayfield.Flags
@@ -144,319 +144,187 @@ local Flags: {[string]: {["CurrentValue"]: any, ["CurrentOption"]: {string}}} = 
 getgenv().Flags = Flags
 
 local function Notify(Title: string, Content: string, Image: string)
-	if not Rayfield then
-		return
-	end
+    if not Rayfield then
+        return
+    end
 
-	Rayfield:Notify({
-		Title = Title,
-		Content = Content,
-		Duration = 10,
-		Image = Image or "info",
-	})
+    Rayfield:Notify({
+        Title = Title,
+        Content = Content,
+        Duration = 10,
+        Image = Image or "info",
+    })
 end
 
 getgenv().Notify = Notify
 
 if not getgenv().PlaceFileName then
-	local PlaceFileName = PlaceName:gsub("%b[]", "")
-	PlaceFileName = PlaceFileName:gsub("[^%a]", "")
-	getgenv().PlaceFileName = PlaceFileName
+    local PlaceFileName = PlaceName:gsub("%b[]", "")
+    PlaceFileName = PlaceFileName:gsub("[^%a]", "")
+    getgenv().PlaceFileName = PlaceFileName
 end
 
 task.spawn(function()
-	if ScriptVersion:sub(1, 1) == "v" then
-		local PlaceFileName = getgenv().PlaceFileName
+    if ScriptVersion:sub(1, 1) == "v" then
+        local PlaceFileName = getgenv().PlaceFileName
 
-		local BindableFunction = Instance.new("BindableFunction")
+        local BindableFunction = Instance.new("BindableFunction")
 
-		local Response = false
+        local Response = false
 
-		local Button1 = "✅ Yes" 
-		local Button2 = "❌ No"
+        local Button1 = "✅ Yes" 
+        local Button2 = "❌ No"
 
-		local File = `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceFileName}.lua`
+        local File = `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceFileName}.lua`
 
-		BindableFunction.OnInvoke = function(Button: string)
-			Response = true
+        BindableFunction.OnInvoke = function(Button: string)
+            Response = true
 
-			if Button == Button1 then
-				loadstring(game:HttpGet(File))()
-			end
-		end
+            if Button == Button1 then
+                loadstring(game:HttpGet(File))()
+            end
+        end
 
-		while task.wait(60) do
-			local Result = game:HttpGet(File)
+        while task.wait(60) do
+            local Result = game:HttpGet(File)
 
-			if not Result then
-				continue
-			end
+            if not Result then
+                continue
+            end
 
-			Result = Result:split('getgenv().ScriptVersion = "')[2]
-			Result = Result:split('"')[1]
+            Result = Result:split('getgenv().ScriptVersion = "')[2]
+            Result = Result:split('"')[1]
 
-			if Result == ScriptVersion then
-				continue
-			end
+            if Result == ScriptVersion then
+                continue
+            end
 
-			SendNotification(`A new Xenon version {Result} has been detected!`, "Would you like to load it?", math.huge, Button1, Button2, BindableFunction)
+            SendNotification(`A new Xenon version {Result} has been detected!`, "Would you like to load it?", math.huge, Button1, Button2, BindableFunction)
 
-			break
-		end
-	end
+            break
+        end
+    end
 end)
 
 local VirtualUser = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
 HandleConnection(Player.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton2(Vector2.zero)
-	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightMeta, false, game)
-	VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightMeta, false, game)
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.zero)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightMeta, false, game)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightMeta, false, game)
 end), "AntiAFK")
 
 type Tab = {
-	CreateSection: (self: Tab, Name: string) -> Section,
-	CreateDivider: (self: Tab) -> Divider,
+    CreateSection: (self: Tab, Name: string) -> Section,
+    CreateDivider: (self: Tab) -> Divider,
 }
 
 local Window = Rayfield:CreateWindow({
-	Name = `Xenon | {PlaceName} | {ScriptVersion or "Dev Mode"}`,
-	Icon = "snowflake",
-	LoadingTitle = "❄ Brought to you by Xenon ❄",
-	LoadingSubtitle = PlaceName,
-	Theme = "DarkBlue",
+    Name = `Xenon | {PlaceName} | {ScriptVersion or "Dev Mode"}`,
+    Icon = "rocket", -- Changed from snowflake to rocket
+    LoadingTitle = "🚀 Xenon Hub Loading...", -- Updated loading title
+    LoadingSubtitle = PlaceName,
+    Theme = "DarkBlue",
 
-	DisableRayfieldPrompts = true,
-	DisableBuildWarnings = true,
+    DisableRayfieldPrompts = true,
+    DisableBuildWarnings = true,
 
-	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "Xenon",
-		FileName = `{getgenv().PlaceFileName or `DevMode-{game.PlaceId}`}-{Player.Name}`
-	},
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Xenon",
+        FileName = `{getgenv().PlaceFileName or `DevMode-{game.PlaceId}`}-{Player.Name}`
+    },
 
-	Discord = {
-		Enabled = true,
-		Invite = "cF8YeDPt2G",
-		RememberJoins = true
-	},
+    Discord = {
+        Enabled = true,
+        Invite = "cF8YeDPt2G",
+        RememberJoins = true
+    },
 })
 
 getgenv().Window = Window
 
-local Tab: Tab = Window:CreateTab("Home", "snowflake")
+local Tab: Tab = Window:CreateTab("Home", "rocket") -- Changed icon
 
-Tab:CreateSection("Join our Discord!")
+Tab:CreateSection("🌟 Quick Start")
+
+Tab:CreateLabel("Welcome to Xenon Hub!", "sparkles") -- Added sparkles icon
+
+Tab:CreateSection("📱 Social")
 
 Tab:CreateLabel("discord.gg/cF8YeDPt2G", "messages-square")
 
-Tab:CreateSection("Performance")
+Tab:CreateSection("📊 Performance")
 
-local PingLabel = Tab:CreateLabel("Ping: 0 ms", "wifi")
-local FPSLabel = Tab:CreateLabel("FPS: 0/s", "monitor")
+local PingLabel = Tab:CreateLabel("Ping: 0 ms", "activity") -- Changed to activity icon
+local FPSLabel = Tab:CreateLabel("FPS: 0/s", "bar-chart") -- Changed to bar-chart icon
 
 local Stats = game:GetService("Stats")
 
 task.spawn(function()
-	while getgenv().Flags == Flags and task.wait(0.25) do
-		PingLabel:Set(`Ping: {math.floor(Stats.PerformanceStats.Ping:GetValue() * 100) / 100} ms`)
-		FPSLabel:Set(`FPS: {math.floor(1 / Stats.FrameTime * 10) / 10}/s`)
-	end
+    while getgenv().Flags == Flags and task.wait(0.25) do
+        PingLabel:Set(`Ping: {math.floor(Stats.PerformanceStats.Ping:GetValue() * 100) / 100} ms`)
+        FPSLabel:Set(`FPS: {math.floor(1 / Stats.FrameTime * 10) / 10}/s`)
+    end
 end)
 
-Tab:CreateSection("Changelog")
+Tab:CreateSection("📝 Changelog")
 
 Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = getgenv().Changelog or "Changelog Not Found"})
 
---------------------------------------------------------------------------------------------------------------
+-- Dev Mode Instructions Section
+Tab:CreateSection("🛠️ Developer Mode")
 
-local SpeedConnection: RBXScriptConnection
-local ConnectedHumanoid
+Tab:CreateParagraph({
+    Title = "How to Use Dev Mode",
+    Content = [[
+1. Before loading the script:
+   • Set Version: getgenv().ScriptVersion = "v1.0.0-dev"
+   • Enable Dev Mode: getgenv().DevMode = true
 
-local function SetSpeed()
-	local Character = Player.Character
+2. Features Available in Dev Mode:
+   • Detailed debugging information
+   • Performance monitoring
+   • Test features access
+   • Extended configuration options
 
-	if not Character then
-		return
-	end
-
-	local Humanoid: Humanoid = Character:FindFirstChild("Humanoid")
-
-	if not Humanoid then
-		return
-	end
-
-	if Flags.ChangeSpeed.CurrentValue then
-		Humanoid.WalkSpeed = Flags.Speed.CurrentValue
-	end
-
-	if not WalkSpeedConnection then
-		WalkSpeedConnection = Humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(SetSpeed)
-		ConnectedHumanoid = Humanoid
-		HandleConnection(WalkSpeedConnection, "WalkSpeedConnection")
-	end
-end
-
-HandleConnection(Player.CharacterAdded:Connect(function()
-	if WalkSpeedConnection then
-		WalkSpeedConnection:Disconnect()
-		WalkSpeedConnection = nil
-	end
-
-	SetSpeed()
-end), "WalkSpeedCharacterAdded")
-
-local Connections = {}
-
-local OriginalText = {}
-
-local function HandleUsernameChange(Object: Instance)
-	if not Flags.HideIdentity.CurrentValue then
-		return
-	end
-
-	if not Object:IsA("TextLabel") and not Object:IsA("TextBox") and not Object:IsA("TextButton") then
-		return
-	end
-
-	local NameReplacement = Flags.NameReplacement.CurrentValue
-
-	if not Connections[Object] then
-		Connections[Object] = Object:GetPropertyChangedSignal("Text"):Connect(function()
-			HandleUsernameChange(Object)
-		end)
-	end
-
-	if Object.Text:find(Player.Name) then
-		OriginalText[Object] = Object.Text
-		Object.Text = Object.Text:gsub(Player.Name, NameReplacement)
-	elseif Object.Text:find(Player.DisplayName) then
-		OriginalText[Object] = Object.Text
-		Object.Text = Object.Text:gsub(Player.DisplayName, NameReplacement)
-	end
-end
-
-local DescendantAddedConnection
-
-local Features = {
-	Speed = {
-		{
-			Element = "Toggle",
-			Info = {
-				Name = "⚡ • Change Speed",
-				CurrentValue = false,
-				Flag = "ChangeSpeed",
-				Callback = function(Value)
-					
-					if not Player.Character or not Value then
-						return
-					end
-					
-					SetSpeed()
-				end,
-			},
-		},
-		{
-			Element = "Slider",
-			Info = {
-				Name = "⚡ • Speed",
-				Range = {0, 250},
-				Increment = 1,
-				Suffix = "Studs/s",
-				CurrentValue = game:GetService("StarterPlayer").CharacterWalkSpeed,
-				Flag = "Speed",
-				Callback = SetSpeed,
-			}
-		},
-		{
-			Element = "Keybind",
-			Info = {
-				Name = "⚡ • Change Speed Keybind",
-				CurrentKeybind = "Z",
-				HoldToInteract = false,
-				Flag = "ChangeSpeedKeybind",
-				Callback = function()
-					Flags.ChangeSpeed:Set(not Flags.ChangeSpeed.CurrentValue)
-				end,
-			}
-		}
-	},
-	HideIdentity = {
-		{
-			Element = "Toggle",
-			Info = {
-				Name = "🎭 • Hide Identity (Client-Sided)",
-				CurrentValue = false,
-				Flag = "HideIdentity",
-				Callback = function(Value)
-					if Value and not DescendantAddedConnection then
-						for i,v in game:GetDescendants() do
-							HandleUsernameChange(v)
-						end
-
-						DescendantAddedConnection = game.DescendantAdded:Connect(HandleUsernameChange)
-
-						HandleConnection(DescendantAddedConnection, "HideIdentity")
-					elseif DescendantAddedConnection then
-						DescendantAddedConnection:Disconnect()
-						DescendantAddedConnection = nil
-
-						for Object: TextLabel?, Text in OriginalText do
-							Object.Text = Text
-						end
-
-						OriginalText = {}
-					end
-				end,
-			}
-		},
-		{
-			Element = "Input",
-			Info = {
-				Name = "💬 • Name To Replace With",
-				CurrentValue = "Xenon",
-				PlaceholderText = "New Name Here",
-				RemoveTextAfterFocusLost = false,
-				Flag = "NameReplacement",
-			}
-		}
-	}
-}
+3. Load the script normally after setting up]]
+})
 
 getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
-	if not Features[FeatureName] then
-		return warn(`The feature '{FeatureName}' does not exist in the Features.`)
-	end
-	
-	for _, Data in Features[FeatureName] do
-		Tab[`Create{Data.Element}`](Tab, Data.Info)
-	end
+    if not Features[FeatureName] then
+        return warn(`The feature '{FeatureName}' does not exist in the Features.`)
+    end
+    
+    for _, Data in Features[FeatureName] do
+        Tab[`Create{Data.Element}`](Tab, Data.Info)
+    end
 end
 
 getgenv().CreateUniversalTabs = function()
-	Rayfield:LoadConfiguration()
+    Rayfield:LoadConfiguration()
 
-	task.wait(1)
+    task.wait(1)
 
-	for FlagName: string, CurrentValue: boolean? in OriginalFlags do
-		local FlagInfo = Flags[FlagName]
+    for FlagName: string, CurrentValue: boolean? in OriginalFlags do
+        local FlagInfo = Flags[FlagName]
 
-		if not FlagInfo then
-			continue
-		end
+        if not FlagInfo then
+            continue
+        end
 
-		FlagInfo:Set(CurrentValue)
-	end
+        FlagInfo:Set(CurrentValue)
+    end
 
-	Notify("Welcome to Xenon", `Loaded in {math.floor((tick() - StartLoadTime) * 10) / 10}s`, "loader-circle")
+    Notify("Welcome to Xenon", `Loaded in {math.floor((tick() - StartLoadTime) * 10) / 10}s`, "rocket")
 end
 
 local XenonStarted = getgenv().XenonStarted
 
 if XenonStarted then
-	XenonStarted()
+    XenonStarted()
 end
 
 --[[function CreateUniversalTabs()
