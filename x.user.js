@@ -17,6 +17,7 @@
 // @grant        GM_addStyle
 // @grant        unsafeWindow
 // @run-at       document-start
+// @connect      raw.githubusercontent.com
 // @connect      api.bypass.bot
 // @connect      api.solar-x.top
 // @connect      xenonhub.xyz
