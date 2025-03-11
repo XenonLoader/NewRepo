@@ -152,7 +152,7 @@ local function Notify(Title: string, Content: string, Image: string)
         Title = Title,
         Content = Content,
         Duration = 10,
-        Image = Image or "info",
+        Image = Image or "rocket",
     })
 end
 
@@ -223,20 +223,17 @@ type Tab = {
 
 local Window = Rayfield:CreateWindow({
     Name = `Xenon | {PlaceName} | {ScriptVersion or "Dev Mode"}`,
-    Icon = "rocket", -- Changed from snowflake to rocket
-    LoadingTitle = "🚀 Xenon Hub Loading...", -- Updated loading title
+    Icon = "rocket",
+    LoadingTitle = "🚀 Xenon Hub Loading...",
     LoadingSubtitle = PlaceName,
     Theme = "DarkBlue",
-
     DisableRayfieldPrompts = true,
     DisableBuildWarnings = true,
-
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "Xenon",
         FileName = `{getgenv().PlaceFileName or `DevMode-{game.PlaceId}`}-{Player.Name}`
     },
-
     Discord = {
         Enabled = true,
         Invite = "cF8YeDPt2G",
@@ -246,11 +243,11 @@ local Window = Rayfield:CreateWindow({
 
 getgenv().Window = Window
 
-local Tab: Tab = Window:CreateTab("Home", "rocket") -- Changed icon
+local Tab: Tab = Window:CreateTab("Home", "rocket")
 
 Tab:CreateSection("🌟 Quick Start")
 
-Tab:CreateLabel("Welcome to Xenon Hub!", "sparkles") -- Added sparkles icon
+Tab:CreateLabel("Welcome to Xenon Hub!", "sparkles")
 
 Tab:CreateSection("📱 Social")
 
@@ -258,8 +255,8 @@ Tab:CreateLabel("discord.gg/cF8YeDPt2G", "messages-square")
 
 Tab:CreateSection("📊 Performance")
 
-local PingLabel = Tab:CreateLabel("Ping: 0 ms", "activity") -- Changed to activity icon
-local FPSLabel = Tab:CreateLabel("FPS: 0/s", "bar-chart") -- Changed to bar-chart icon
+local PingLabel = Tab:CreateLabel("Ping: 0 ms", "activity")
+local FPSLabel = Tab:CreateLabel("FPS: 0/s", "bar-chart")
 
 local Stats = game:GetService("Stats")
 
@@ -274,7 +271,6 @@ Tab:CreateSection("📝 Changelog")
 
 Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = getgenv().Changelog or "Changelog Not Found"})
 
--- Dev Mode Instructions Section
 Tab:CreateSection("🛠️ Developer Mode")
 
 Tab:CreateParagraph({
