@@ -590,7 +590,28 @@ end)
 
 Tab:CreateSection("📝 Changelog")
 
-Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = getgenv().Changelog or "Changelog Not Found"})
+-- Fetch changelog from game file
+local function GetGameChangelog()
+    local success, Result = pcall(function()
+        return game:HttpGet(string.format(
+            "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
+            getgenv().PlaceFileName
+        ))
+    end)
+
+    if success and Result then
+        local changelogStart = Result:find('getgenv().Changelog = %[%[')
+        if changelogStart then
+            local changelogEnd = Result:find('%]%]', changelogStart)
+            if changelogEnd then
+                return Result:sub(changelogStart + 23, changelogEnd - 1)
+            end
+        end
+    end
+    return "• Changelog not available"
+end
+
+Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = GetGameChangelog()})
 
 getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
     if not Features[FeatureName] then
