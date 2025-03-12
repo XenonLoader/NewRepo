@@ -611,16 +611,6 @@ local function GetGameChangelog()
     return "• Changelog not available"
 end
 
-Tab:CreateParagraph({
-    Title = string.format(
-        "%s %s",
-        tostring(PlaceName or "Unknown Place"),
-        tostring(ScriptVersion or "Unknown Version")
-    ),
-    Content = GetGameChangelog()
-})
-
-
 Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = GetGameChangelog()})
 
 getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
