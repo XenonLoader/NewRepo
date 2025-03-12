@@ -3,6 +3,7 @@ local StartLoadTime = tick()
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
 
 local Player = Players.LocalPlayer
 
@@ -25,6 +26,184 @@ if not getgenv().ScriptVersion then
 end
 
 local ScriptVersion = getgenv().ScriptVersion
+
+-- Create update notification GUI function
+local function CreateUpdateNotification(currentVersion, newVersion)
+    -- Create ScreenGui
+    local UpdateGui = Instance.new("ScreenGui")
+    UpdateGui.Name = "XenonUpdateNotification"
+    UpdateGui.Parent = game:GetService("CoreGui")
+    
+    -- Create main frame with blur effect
+    local BlurEffect = Instance.new("BlurEffect")
+    BlurEffect.Size = 10
+    BlurEffect.Parent = game:GetService("Lighting")
+    
+    -- Create main frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 320, 0, 180)
+    MainFrame.Position = UDim2.new(0.5, -160, 1.2, 0) -- Start below screen
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = UpdateGui
+    
+    -- Add gradient
+    local UIGradient = Instance.new("UIGradient")
+    UIGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+    })
+    UIGradient.Parent = MainFrame
+    
+    -- Add corner radius
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = MainFrame
+    
+    -- Add stroke
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = Color3.fromRGB(60, 60, 80)
+    Stroke.Thickness = 1.5
+    Stroke.Parent = MainFrame
+    
+    -- Create rocket icon
+    local RocketIcon = Instance.new("ImageLabel")
+    RocketIcon.Size = UDim2.new(0, 32, 0, 32)
+    RocketIcon.Position = UDim2.new(0, 15, 0, 15)
+    RocketIcon.BackgroundTransparency = 1
+    RocketIcon.Image = "rbxassetid://6026568198"
+    RocketIcon.Parent = MainFrame
+    
+    -- Create title
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1, -70, 0, 30)
+    Title.Position = UDim2.new(0, 55, 0, 15)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.fromRGB(240, 240, 255)
+    Title.TextSize = 18
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Text = "New Update Available!"
+    Title.Parent = MainFrame
+    
+    -- Create version info
+    local VersionInfo = Instance.new("TextLabel")
+    VersionInfo.Name = "VersionInfo"
+    VersionInfo.Size = UDim2.new(1, -30, 0, 50)
+    VersionInfo.Position = UDim2.new(0, 15, 0, 55)
+    VersionInfo.BackgroundTransparency = 1
+    VersionInfo.TextColor3 = Color3.fromRGB(180, 180, 200)
+    VersionInfo.TextSize = 14
+    VersionInfo.Font = Enum.Font.Gotham
+    VersionInfo.TextXAlignment = Enum.TextXAlignment.Left
+    VersionInfo.Text = string.format("Current version: %s\nNew version: %s", currentVersion, newVersion)
+    VersionInfo.Parent = MainFrame
+    
+    -- Create update button
+    local UpdateButton = Instance.new("TextButton")
+    UpdateButton.Name = "UpdateButton"
+    UpdateButton.Size = UDim2.new(0.85, 0, 0, 36)
+    UpdateButton.Position = UDim2.new(0.075, 0, 1, -80)
+    UpdateButton.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+    UpdateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    UpdateButton.TextSize = 14
+    UpdateButton.Font = Enum.Font.GothamBold
+    UpdateButton.Text = "🚀 Update Now"
+    UpdateButton.Parent = MainFrame
+    
+    -- Add gradient to button
+    local ButtonGradient = Instance.new("UIGradient")
+    ButtonGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(59, 130, 246)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(37, 99, 235))
+    })
+    ButtonGradient.Parent = UpdateButton
+    
+    -- Add corner radius to button
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.Parent = UpdateButton
+    
+    -- Create later button
+    local LaterButton = Instance.new("TextButton")
+    LaterButton.Name = "LaterButton"
+    LaterButton.Size = UDim2.new(0.85, 0, 0, 30)
+    LaterButton.Position = UDim2.new(0.075, 0, 1, -35)
+    LaterButton.BackgroundTransparency = 1
+    LaterButton.TextColor3 = Color3.fromRGB(130, 130, 150)
+    LaterButton.TextSize = 13
+    LaterButton.Font = Enum.Font.Gotham
+    LaterButton.Text = "Remind me later"
+    LaterButton.Parent = MainFrame
+    
+    -- Animate the frame in
+    local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(MainFrame, tweenInfo, {
+        Position = UDim2.new(0.5, -160, 0.5, -90)
+    })
+    tween:Play()
+    
+    -- Button hover effects
+    UpdateButton.MouseEnter:Connect(function()
+        TweenService:Create(UpdateButton, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(37, 99, 235)
+        }):Play()
+    end)
+    
+    UpdateButton.MouseLeave:Connect(function()
+        TweenService:Create(UpdateButton, TweenInfo.new(0.3), {
+            BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+        }):Play()
+    end)
+    
+    -- Button handlers
+    UpdateButton.MouseButton1Click:Connect(function()
+        -- Animate out
+        local tweenOut = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -160, 1.2, 0)
+        })
+        tweenOut:Play()
+        
+        -- Remove blur and destroy GUI
+        tweenOut.Completed:Connect(function()
+            BlurEffect:Destroy()
+            UpdateGui:Destroy()
+            
+            -- Update script
+            Notify("Updating Xenon", "Installing the latest version...", "rocket")
+            task.wait(1)
+            local success, err = pcall(function()
+                loadstring(game:HttpGet(string.format(
+                    "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
+                    getgenv().PlaceFileName
+                )))()
+            end)
+            if not success then
+                Notify("Update Failed", "Error: " .. tostring(err), "x")
+            else
+                Notify("Update Complete", "Xenon has been updated successfully!", "check")
+            end
+        end)
+    end)
+    
+    LaterButton.MouseButton1Click:Connect(function()
+        -- Animate out
+        local tweenOut = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -160, 1.2, 0)
+        })
+        tweenOut:Play()
+        
+        -- Remove blur and destroy GUI
+        tweenOut.Completed:Connect(function()
+            BlurEffect:Destroy()
+            UpdateGui:Destroy()
+        end)
+    end)
+    
+    return UpdateGui
+end
 
 getgenv().gethui = function()
     return game:GetService("CoreGui")
@@ -167,33 +346,11 @@ end
 task.spawn(function()
     if ScriptVersion:sub(1, 1) == "v" then
         local PlaceFileName = getgenv().PlaceFileName
-        local BindableFunction = Instance.new("BindableFunction")
-
-        local Response = false
-        local Button1 = "🔄 Update Now"
-        local Button2 = "⏳ Later"
 
         local File = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
             PlaceFileName
         )
-
-        BindableFunction.OnInvoke = function(Button)
-            Response = true
-
-            if Button == Button1 then
-                Notify("Updating Xenon", "Installing the latest version...", "rocket")
-                task.wait(1)
-                local success, err = pcall(function()
-                    loadstring(game:HttpGet(File))()
-                end)
-                if not success then
-                    Notify("Update Failed", "Error: " .. tostring(err), "x")
-                else
-                    Notify("Update Complete", "Xenon has been updated successfully!", "check")
-                end
-            end
-        end
 
         while task.wait(60) do
             local success, Result = pcall(function()
@@ -205,7 +362,6 @@ task.spawn(function()
                 continue
             end
 
-            -- Menggunakan split untuk mendapatkan versi dari script
             local splitResult = Result:split('getgenv().ScriptVersion = "')
             if not splitResult[2] then
                 continue
@@ -220,30 +376,12 @@ task.spawn(function()
                 continue
             end
 
-            -- Enhanced update notification
-            Notify("New Version Available!",
-                string.format("🚀 Xenon %s is now available!\n\nCurrent version: %s\nNew version: %s\n\nWould you like to update now?",
-                    versionMatch,
-                    ScriptVersion,
-                    versionMatch
-                ),
-                "sparkles"
-            )
-
-            SendNotification(
-                "Xenon Update",
-                string.format("New version %s available!", versionMatch),
-                math.huge,
-                Button1,
-                Button2,
-                BindableFunction
-            )
-
+            -- Show animated update notification
+            CreateUpdateNotification(ScriptVersion, versionMatch)
             break
         end
     end
 end)
-
 
 local VirtualUser = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -321,7 +459,7 @@ local function FormatTime(seconds)
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
     local secs = math.floor(seconds % 60)
-
+    
     if hours > 0 then
         return string.format("%02dh %02dm %02ds", hours, minutes, secs)
     else
@@ -336,20 +474,20 @@ task.spawn(function()
         -- Update ping and FPS
         PingLabel:Set(`Ping: {math.floor(Stats.PerformanceStats.Ping:GetValue() * 100) / 100} ms`)
         FPSLabel:Set(`FPS: {math.floor(1 / Stats.FrameTime * 10) / 10}/s`)
-
+        
         -- Update memory usage
         local memoryUsage = Stats:GetTotalMemoryUsageMb()
         MemoryLabel:Set(`Memory: {FormatMemory(memoryUsage)}`)
-
+        
         -- Update server time
         local serverTime = os.date("*t")
         ServerTimeLabel:Set(`Server Time: {string.format("%02d:%02d:%02d", serverTime.hour, serverTime.min, serverTime.sec)}`)
-
+        
         -- Update players count
         local playerCount = #Players:GetPlayers()
         local maxPlayers = Players.MaxPlayers
         PlayersLabel:Set(`Players: {playerCount}/{maxPlayers}`)
-
+        
         -- Update uptime
         local uptime = tick() - StartTime
         UptimeLabel:Set(`Uptime: {FormatTime(uptime)}`)
@@ -372,7 +510,7 @@ getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
     if not Features[FeatureName] then
         return warn(`The feature '{FeatureName}' does not exist in the Features.`)
     end
-
+    
     for _, Data in Features[FeatureName] do
         Tab[`Create{Data.Element}`](Tab, Data.Info)
     end
