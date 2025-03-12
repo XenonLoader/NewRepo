@@ -116,7 +116,6 @@ local Rayfield
 
 if getgenv().RayfieldTesting then
     Rayfield = loadstring(getgenv().RayfieldTesting)()
-    print("Running Rayfield Testing")
 else
     repeat
         pcall(function()
@@ -164,6 +163,7 @@ if not getgenv().PlaceFileName then
     getgenv().PlaceFileName = PlaceFileName
 end
 
+-- Version Check System
 task.spawn(function()
     if ScriptVersion:sub(1, 1) == "v" then
         local PlaceFileName = getgenv().PlaceFileName
@@ -172,8 +172,8 @@ task.spawn(function()
 
         local Response = false
 
-        local Button1 = "✅ Yes" 
-        local Button2 = "❌ No"
+        local Button1 = "🔄 Update Now" 
+        local Button2 = "⏳ Later"
 
         local File = `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceFileName}.lua`
 
@@ -181,25 +181,49 @@ task.spawn(function()
             Response = true
 
             if Button == Button1 then
+                Notify("Updating Xenon", "Installing the latest version...", "rocket")
+                task.wait(1)
                 loadstring(game:HttpGet(File))()
+                Notify("Update Complete", "Xenon has been updated successfully!", "check")
             end
         end
 
         while task.wait(60) do
-            local Result = game:HttpGet(File)
+            local success, Result = pcall(function()
+                return game:HttpGet(File)
+            end)
 
-            if not Result then
+            if not success or not Result then
                 continue
             end
 
-            Result = Result:split('getgenv().ScriptVersion = "')[2]
-            Result = Result:split('"')[1]
-
-            if Result == ScriptVersion then
+            local versionMatch = Result:match('getgenv().ScriptVersion = "(.-)"')
+            if not versionMatch then
                 continue
             end
 
-            SendNotification(`A new Xenon version {Result} has been detected!`, "Would you like to load it?", math.huge, Button1, Button2, BindableFunction)
+            if versionMatch == ScriptVersion then
+                continue
+            end
+
+            -- Enhanced update notification
+            Notify("New Version Available!", 
+                string.format("🚀 Xenon %s is now available!\n\nCurrent version: %s\nNew version: %s\n\nWould you like to update now?",
+                    versionMatch,
+                    ScriptVersion,
+                    versionMatch
+                ),
+                "sparkles"
+            )
+
+            SendNotification(
+                "Xenon Update",
+                `New version {versionMatch} available!`,
+                math.huge,
+                Button1,
+                Button2,
+                BindableFunction
+            )
 
             break
         end
@@ -255,15 +279,73 @@ Tab:CreateLabel("discord.gg/cF8YeDPt2G", "messages-square")
 
 Tab:CreateSection("📊 Performance")
 
+local Stats = game:GetService("Stats")
+local RunService = game:GetService("RunService")
+
+-- Performance Labels
 local PingLabel = Tab:CreateLabel("Ping: 0 ms", "activity")
 local FPSLabel = Tab:CreateLabel("FPS: 0/s", "bar-chart")
+local MemoryLabel = Tab:CreateLabel("Memory: 0 MB", "database")
+local ServerTimeLabel = Tab:CreateLabel("Server Time: 00:00:00", "clock")
+local PlayersLabel = Tab:CreateLabel("Players: 0/0", "users")
+local UptimeLabel = Tab:CreateLabel("Uptime: 0m 0s", "timer")
+local CPULabel = Tab:CreateLabel("CPU Usage: 0%", "cpu")
+local GraphicsLabel = Tab:CreateLabel("Graphics: Level 0", "layers")
 
-local Stats = game:GetService("Stats")
+-- Format memory size
+local function FormatMemory(memory)
+    if memory < 1000 then
+        return string.format("%.1f KB", memory)
+    else
+        return string.format("%.1f MB", memory / 1024)
+    end
+end
+
+-- Format time
+local function FormatTime(seconds)
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local secs = math.floor(seconds % 60)
+    
+    if hours > 0 then
+        return string.format("%02dh %02dm %02ds", hours, minutes, secs)
+    else
+        return string.format("%02dm %02ds", minutes, secs)
+    end
+end
+
+local StartTime = tick()
 
 task.spawn(function()
     while getgenv().Flags == Flags and task.wait(0.25) do
+        -- Update ping and FPS
         PingLabel:Set(`Ping: {math.floor(Stats.PerformanceStats.Ping:GetValue() * 100) / 100} ms`)
         FPSLabel:Set(`FPS: {math.floor(1 / Stats.FrameTime * 10) / 10}/s`)
+        
+        -- Update memory usage
+        local memoryUsage = Stats:GetTotalMemoryUsageMb()
+        MemoryLabel:Set(`Memory: {FormatMemory(memoryUsage)}`)
+        
+        -- Update server time
+        local serverTime = os.date("*t")
+        ServerTimeLabel:Set(`Server Time: {string.format("%02d:%02d:%02d", serverTime.hour, serverTime.min, serverTime.sec)}`)
+        
+        -- Update players count
+        local playerCount = #Players:GetPlayers()
+        local maxPlayers = Players.MaxPlayers
+        PlayersLabel:Set(`Players: {playerCount}/{maxPlayers}`)
+        
+        -- Update uptime
+        local uptime = tick() - StartTime
+        UptimeLabel:Set(`Uptime: {FormatTime(uptime)}`)
+
+        -- Update CPU usage
+        local cpuUsage = Stats:GetTotalMemoryUsageMb()
+        CPULabel:Set(`CPU Usage: {math.floor(Stats.PerformanceStats.CPU:GetValue())}%`)
+
+        -- Update graphics quality
+        local graphicsQuality = settings().Rendering.QualityLevel
+        GraphicsLabel:Set(`Graphics: Level {graphicsQuality}`)
     end
 end)
 
@@ -304,3 +386,5 @@ local XenonStarted = getgenv().XenonStarted
 if XenonStarted then
     XenonStarted()
 end
+
+return true
