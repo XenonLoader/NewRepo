@@ -3,7 +3,6 @@ local StartLoadTime = tick()
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
-local TweenService = game:GetService("TweenService")
 
 local Player = Players.LocalPlayer
 
@@ -128,136 +127,73 @@ end
 
 getgenv().Initiated = nil
 
--- Create update notification GUI
-local function CreateUpdateNotification(currentVersion, newVersion)
-    -- Create ScreenGui
-    local UpdateGui = Instance.new("ScreenGui")
-    UpdateGui.Name = "XenonUpdateNotification"
-    UpdateGui.Parent = game:GetService("CoreGui")
-    
-    -- Create main frame
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 300, 0, 200)
-    MainFrame.Position = UDim2.new(0.5, -150, 1, 50) -- Start below screen
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Parent = UpdateGui
-    
-    -- Add corner radius
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = MainFrame
-    
-    -- Create title
-    local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
-    Title.Size = UDim2.new(1, -20, 0, 40)
-    Title.Position = UDim2.new(0, 10, 0, 10)
-    Title.BackgroundTransparency = 1
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 22
-    Title.Font = Enum.Font.GothamBold
-    Title.Text = "🚀 New Update Available!"
-    Title.Parent = MainFrame
-    
-    -- Create version info
-    local VersionInfo = Instance.new("TextLabel")
-    VersionInfo.Name = "VersionInfo"
-    VersionInfo.Size = UDim2.new(1, -20, 0, 60)
-    VersionInfo.Position = UDim2.new(0, 10, 0, 60)
-    VersionInfo.BackgroundTransparency = 1
-    VersionInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
-    VersionInfo.TextSize = 16
-    VersionInfo.Font = Enum.Font.Gotham
-    VersionInfo.Text = string.format("Current version: %s\nNew version: %s", currentVersion, newVersion)
-    VersionInfo.TextYAlignment = Enum.TextYAlignment.Top
-    VersionInfo.Parent = MainFrame
-    
-    -- Create update button
-    local UpdateButton = Instance.new("TextButton")
-    UpdateButton.Name = "UpdateButton"
-    UpdateButton.Size = UDim2.new(0.8, 0, 0, 40)
-    UpdateButton.Position = UDim2.new(0.1, 0, 1, -90)
-    UpdateButton.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
-    UpdateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    UpdateButton.TextSize = 16
-    UpdateButton.Font = Enum.Font.GothamBold
-    UpdateButton.Text = "Update Now"
-    UpdateButton.Parent = MainFrame
-    
-    -- Add corner radius to button
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 8)
-    ButtonCorner.Parent = UpdateButton
-    
-    -- Create later button
-    local LaterButton = Instance.new("TextButton")
-    LaterButton.Name = "LaterButton"
-    LaterButton.Size = UDim2.new(0.8, 0, 0, 30)
-    LaterButton.Position = UDim2.new(0.1, 0, 1, -40)
-    LaterButton.BackgroundTransparency = 1
-    LaterButton.TextColor3 = Color3.fromRGB(150, 150, 150)
-    LaterButton.TextSize = 14
-    LaterButton.Font = Enum.Font.Gotham
-    LaterButton.Text = "Remind me later"
-    LaterButton.Parent = MainFrame
-    
-    -- Animate the frame in
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(MainFrame, tweenInfo, {
-        Position = UDim2.new(0.5, -150, 0.5, -100)
+local function SendNotification(Title: string, Text: string, Duration: number?, Button1: string?, Button2: string?, Callback: BindableFunction?)
+    StarterGui:SetCore("SendNotification", {
+        Title = Title,
+        Text = Text,
+        Duration = Duration or 10,
+        Button1 = Button1,
+        Button2 = Button2,
+        Callback = Callback
     })
-    tween:Play()
-    
-    -- Button handlers
-    UpdateButton.MouseButton1Click:Connect(function()
-        -- Animate out
-        local tweenOut = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-            Position = UDim2.new(0.5, -150, 1, 50)
-        })
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-        UpdateGui:Destroy()
-        
-        -- Update script
-        Notify("Updating Xenon", "Installing the latest version...", "rocket")
-        task.wait(1)
-        local success, err = pcall(function()
-            loadstring(game:HttpGet(string.format(
-                "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
-                getgenv().PlaceFileName
-            )))()
-        end)
-        if not success then
-            Notify("Update Failed", "Error: " .. tostring(err), "x")
-        else
-            Notify("Update Complete", "Xenon has been updated successfully!", "check")
-        end
-    end)
-    
-    LaterButton.MouseButton1Click:Connect(function()
-        -- Animate out
-        local tweenOut = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-            Position = UDim2.new(0.5, -150, 1, 50)
-        })
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-        UpdateGui:Destroy()
-    end)
-    
-    return UpdateGui
+end
+
+local Flags: {[string]: {["CurrentValue"]: any, ["CurrentOption"]: {string}}} = Rayfield.Flags
+
+getgenv().Flags = Flags
+
+local function Notify(Title: string, Content: string, Image: string)
+    if not Rayfield then
+        return
+    end
+
+    Rayfield:Notify({
+        Title = Title,
+        Content = Content,
+        Duration = 10,
+        Image = Image or "rocket",
+    })
+end
+
+getgenv().Notify = Notify
+
+if not getgenv().PlaceFileName then
+    local PlaceFileName = PlaceName:gsub("%b[]", "")
+    PlaceFileName = PlaceFileName:gsub("[^%a]", "")
+    getgenv().PlaceFileName = PlaceFileName
 end
 
 -- Version Check System
 task.spawn(function()
     if ScriptVersion:sub(1, 1) == "v" then
         local PlaceFileName = getgenv().PlaceFileName
+        local BindableFunction = Instance.new("BindableFunction")
+
+        local Response = false
+        local Button1 = "🔄 Update Now"
+        local Button2 = "⏳ Later"
 
         local File = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
             PlaceFileName
         )
+
+        BindableFunction.OnInvoke = function(Button)
+            Response = true
+
+            if Button == Button1 then
+                Notify("Updating Xenon", "Installing the latest version...", "rocket")
+                task.wait(1)
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet(File))()
+                end)
+                if not success then
+                    Notify("Update Failed", "Error: " .. tostring(err), "x")
+                else
+                    Notify("Update Complete", "Xenon has been updated successfully!", "check")
+                end
+            end
+        end
 
         while task.wait(60) do
             local success, Result = pcall(function()
@@ -269,6 +205,7 @@ task.spawn(function()
                 continue
             end
 
+            -- Menggunakan split untuk mendapatkan versi dari script
             local splitResult = Result:split('getgenv().ScriptVersion = "')
             if not splitResult[2] then
                 continue
@@ -283,12 +220,30 @@ task.spawn(function()
                 continue
             end
 
-            -- Show animated update notification
-            CreateUpdateNotification(ScriptVersion, versionMatch)
+            -- Enhanced update notification
+            Notify("New Version Available!",
+                string.format("🚀 Xenon %s is now available!\n\nCurrent version: %s\nNew version: %s\n\nWould you like to update now?",
+                    versionMatch,
+                    ScriptVersion,
+                    versionMatch
+                ),
+                "sparkles"
+            )
+
+            SendNotification(
+                "Xenon Update",
+                string.format("New version %s available!", versionMatch),
+                math.huge,
+                Button1,
+                Button2,
+                BindableFunction
+            )
+
             break
         end
     end
 end)
+
 
 local VirtualUser = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -366,7 +321,7 @@ local function FormatTime(seconds)
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
     local secs = math.floor(seconds % 60)
-    
+
     if hours > 0 then
         return string.format("%02dh %02dm %02ds", hours, minutes, secs)
     else
@@ -381,20 +336,20 @@ task.spawn(function()
         -- Update ping and FPS
         PingLabel:Set(`Ping: {math.floor(Stats.PerformanceStats.Ping:GetValue() * 100) / 100} ms`)
         FPSLabel:Set(`FPS: {math.floor(1 / Stats.FrameTime * 10) / 10}/s`)
-        
+
         -- Update memory usage
         local memoryUsage = Stats:GetTotalMemoryUsageMb()
         MemoryLabel:Set(`Memory: {FormatMemory(memoryUsage)}`)
-        
+
         -- Update server time
         local serverTime = os.date("*t")
         ServerTimeLabel:Set(`Server Time: {string.format("%02d:%02d:%02d", serverTime.hour, serverTime.min, serverTime.sec)}`)
-        
+
         -- Update players count
         local playerCount = #Players:GetPlayers()
         local maxPlayers = Players.MaxPlayers
         PlayersLabel:Set(`Players: {playerCount}/{maxPlayers}`)
-        
+
         -- Update uptime
         local uptime = tick() - StartTime
         UptimeLabel:Set(`Uptime: {FormatTime(uptime)}`)
@@ -417,7 +372,7 @@ getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
     if not Features[FeatureName] then
         return warn(`The feature '{FeatureName}' does not exist in the Features.`)
     end
-    
+
     for _, Data in Features[FeatureName] do
         Tab[`Create{Data.Element}`](Tab, Data.Info)
     end
