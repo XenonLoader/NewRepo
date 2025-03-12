@@ -197,7 +197,8 @@ task.spawn(function()
                 continue
             end
 
-            local versionMatch = Result:match('getgenv().ScriptVersion = "(.-)"')
+            local versionMatch = 			Result = Result:split('getgenv().ScriptVersion = "')[2]
+			Result = Result:split('"')[1]
             if not versionMatch then
                 continue
             end
