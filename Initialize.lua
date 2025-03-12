@@ -6,9 +6,6 @@ local function Notify(Text)
     })
 end
 
--- Enable DevMode for debugging
-getgenv().DevMode = true
-getgenv().ScriptVersion = "v1.0.0"
 
 -- Get and clean place name
 local PlaceName = game:GetService("AssetService"):GetGamePlacesAsync(game.GameId):GetCurrentPage()[1].Name
