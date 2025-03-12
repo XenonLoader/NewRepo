@@ -53,7 +53,7 @@ local function compareVersions(v1, v2)
 end
 
 -- Create update notification GUI function
-local function CreateUpdateNotification(currentVersion, newVersion)
+local function CreateUpdateNotification(currentVersion, newVersion, isDowngrade, changelog)
     -- Create ScreenGui
     local UpdateGui = Instance.new("ScreenGui")
     UpdateGui.Name = "XenonUpdateNotification"
@@ -64,11 +64,11 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     BlurEffect.Size = 10
     BlurEffect.Parent = game:GetService("Lighting")
     
-    -- Create main frame
+    -- Create main frame (increased height to accommodate changelog)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 320, 0, 180)
-    MainFrame.Position = UDim2.new(0.5, -160, 1.2, 0) -- Start below screen
+    MainFrame.Size = UDim2.new(0, 320, 0, 280)
+    MainFrame.Position = UDim2.new(0.5, -160, 1.2, 0)
     MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = UpdateGui
@@ -92,13 +92,13 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     Stroke.Thickness = 1.5
     Stroke.Parent = MainFrame
     
-    -- Create rocket icon
-    local RocketIcon = Instance.new("ImageLabel")
-    RocketIcon.Size = UDim2.new(0, 32, 0, 32)
-    RocketIcon.Position = UDim2.new(0, 15, 0, 15)
-    RocketIcon.BackgroundTransparency = 1
-    RocketIcon.Image = "rbxassetid://6026568198"
-    RocketIcon.Parent = MainFrame
+    -- Create icon
+    local Icon = Instance.new("ImageLabel")
+    Icon.Size = UDim2.new(0, 32, 0, 32)
+    Icon.Position = UDim2.new(0, 15, 0, 15)
+    Icon.BackgroundTransparency = 1
+    Icon.Image = isDowngrade and "rbxassetid://6031075938" or "rbxassetid://6026568198"
+    Icon.Parent = MainFrame
     
     -- Create title
     local Title = Instance.new("TextLabel")
@@ -110,7 +110,7 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     Title.TextSize = 18
     Title.Font = Enum.Font.GothamBold
     Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Text = "New Update Available!"
+    Title.Text = isDowngrade and "Version Mismatch Detected!" or "New Update Available!"
     Title.Parent = MainFrame
     
     -- Create version info
@@ -123,26 +123,64 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     VersionInfo.TextSize = 14
     VersionInfo.Font = Enum.Font.Gotham
     VersionInfo.TextXAlignment = Enum.TextXAlignment.Left
-    VersionInfo.Text = string.format("Current version: %s\nNew version: %s", currentVersion, newVersion)
+    VersionInfo.Text = string.format("Current version: %s\n%s version: %s",
+        currentVersion,
+        isDowngrade and "Required" or "New",
+        newVersion
+    )
     VersionInfo.Parent = MainFrame
+    
+    -- Create changelog frame with scrolling
+    local ChangelogFrame = Instance.new("ScrollingFrame")
+    ChangelogFrame.Name = "ChangelogFrame"
+    ChangelogFrame.Size = UDim2.new(0.9, 0, 0, 100)
+    ChangelogFrame.Position = UDim2.new(0.05, 0, 0, 110)
+    ChangelogFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    ChangelogFrame.BorderSizePixel = 0
+    ChangelogFrame.ScrollBarThickness = 4
+    ChangelogFrame.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 80)
+    ChangelogFrame.Parent = MainFrame
+    
+    -- Add corner radius to changelog frame
+    local ChangelogCorner = Instance.new("UICorner")
+    ChangelogCorner.CornerRadius = UDim.new(0, 6)
+    ChangelogCorner.Parent = ChangelogFrame
+    
+    -- Create changelog text
+    local ChangelogText = Instance.new("TextLabel")
+    ChangelogText.Name = "ChangelogText"
+    ChangelogText.Size = UDim2.new(1, -20, 1, -10)
+    ChangelogText.Position = UDim2.new(0, 10, 0, 5)
+    ChangelogText.BackgroundTransparency = 1
+    ChangelogText.TextColor3 = Color3.fromRGB(200, 200, 220)
+    ChangelogText.TextSize = 12
+    ChangelogText.Font = Enum.Font.Gotham
+    ChangelogText.TextXAlignment = Enum.TextXAlignment.Left
+    ChangelogText.TextYAlignment = Enum.TextYAlignment.Top
+    ChangelogText.TextWrapped = true
+    ChangelogText.Text = changelog or "No changelog available"
+    ChangelogText.Parent = ChangelogFrame
+    
+    -- Adjust scrolling frame content size
+    ChangelogFrame.CanvasSize = UDim2.new(0, 0, 0, ChangelogText.TextBounds.Y + 10)
     
     -- Create update button
     local UpdateButton = Instance.new("TextButton")
     UpdateButton.Name = "UpdateButton"
     UpdateButton.Size = UDim2.new(0.85, 0, 0, 36)
     UpdateButton.Position = UDim2.new(0.075, 0, 1, -80)
-    UpdateButton.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+    UpdateButton.BackgroundColor3 = isDowngrade and Color3.fromRGB(239, 68, 68) or Color3.fromRGB(59, 130, 246)
     UpdateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     UpdateButton.TextSize = 14
     UpdateButton.Font = Enum.Font.GothamBold
-    UpdateButton.Text = "🚀 Update Now"
+    UpdateButton.Text = isDowngrade and "⚠️ Switch Version" or "🚀 Update Now"
     UpdateButton.Parent = MainFrame
     
     -- Add gradient to button
     local ButtonGradient = Instance.new("UIGradient")
     ButtonGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(59, 130, 246)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(37, 99, 235))
+        ColorSequenceKeypoint.new(0, isDowngrade and Color3.fromRGB(239, 68, 68) or Color3.fromRGB(59, 130, 246)),
+        ColorSequenceKeypoint.new(1, isDowngrade and Color3.fromRGB(220, 38, 38) or Color3.fromRGB(37, 99, 235))
     })
     ButtonGradient.Parent = UpdateButton
     
@@ -160,26 +198,26 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     LaterButton.TextColor3 = Color3.fromRGB(130, 130, 150)
     LaterButton.TextSize = 13
     LaterButton.Font = Enum.Font.Gotham
-    LaterButton.Text = "Remind me later"
+    LaterButton.Text = isDowngrade and "Continue Anyway" or "Remind me later"
     LaterButton.Parent = MainFrame
     
     -- Animate the frame in
     local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
     local tween = TweenService:Create(MainFrame, tweenInfo, {
-        Position = UDim2.new(0.5, -160, 0.5, -90)
+        Position = UDim2.new(0.5, -160, 0.5, -140)
     })
     tween:Play()
     
     -- Button hover effects
     UpdateButton.MouseEnter:Connect(function()
         TweenService:Create(UpdateButton, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(37, 99, 235)
+            BackgroundColor3 = isDowngrade and Color3.fromRGB(220, 38, 38) or Color3.fromRGB(37, 99, 235)
         }):Play()
     end)
     
     UpdateButton.MouseLeave:Connect(function()
         TweenService:Create(UpdateButton, TweenInfo.new(0.3), {
-            BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+            BackgroundColor3 = isDowngrade and Color3.fromRGB(239, 68, 68) or Color3.fromRGB(59, 130, 246)
         }):Play()
     end)
     
@@ -197,7 +235,9 @@ local function CreateUpdateNotification(currentVersion, newVersion)
             UpdateGui:Destroy()
             
             -- Update script
-            Notify("Updating Xenon", "Installing the latest version...", "rocket")
+            Notify(isDowngrade and "Switching Version" or "Updating Xenon",
+                  isDowngrade and "Switching to the required version..." or "Installing the latest version...",
+                  isDowngrade and "alert-triangle" or "rocket")
             task.wait(1)
             local success, err = pcall(function()
                 loadstring(game:HttpGet(string.format(
@@ -208,7 +248,9 @@ local function CreateUpdateNotification(currentVersion, newVersion)
             if not success then
                 Notify("Update Failed", "Error: " .. tostring(err), "x")
             else
-                Notify("Update Complete", "Xenon has been updated successfully!", "check")
+                Notify(isDowngrade and "Version Switch Complete" or "Update Complete",
+                      isDowngrade and "Successfully switched to the required version!" or "Xenon has been updated successfully!",
+                      "check")
             end
         end)
     end)
@@ -229,6 +271,66 @@ local function CreateUpdateNotification(currentVersion, newVersion)
     
     return UpdateGui
 end
+
+-- Version Check System
+task.spawn(function()
+    if ScriptVersion:sub(1, 1) == "v" then
+        local PlaceFileName = getgenv().PlaceFileName
+
+        local File = string.format(
+            "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
+            PlaceFileName
+        )
+
+        while task.wait(30) do -- Check every 30 seconds
+            local success, Result = pcall(function()
+                return game:HttpGet(File)
+            end)
+
+            if not success or not Result then
+                warn("Failed to fetch version. Retrying in 30 seconds...")
+                continue
+            end
+
+            -- Extract version
+            local splitResult = Result:split('getgenv().ScriptVersion = "')
+            if not splitResult[2] then
+                continue
+            end
+
+            local versionMatch = splitResult[2]:split('"')[1]
+            if not versionMatch or versionMatch == "" then
+                continue
+            end
+
+            -- Extract changelog
+            local changelog = ""
+            local changelogStart = Result:find('getgenv().Changelog = %[%[')
+            if changelogStart then
+                local changelogEnd = Result:find('%]%]', changelogStart)
+                if changelogEnd then
+                    changelog = Result:sub(changelogStart + 23, changelogEnd - 1)
+                end
+            end
+
+            -- Compare versions
+            local comparison = compareVersions(ScriptVersion, versionMatch)
+            
+            if comparison == 0 then
+                -- Versions are equal, continue checking
+                continue
+            elseif comparison > 0 then
+                -- Current version is higher than required (downgrade needed)
+                CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog)
+                break
+            else
+                -- Update available
+                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog)
+                break
+            end
+        end
+    end
+end)
 
 getgenv().gethui = function()
     return game:GetService("CoreGui")
@@ -366,48 +468,6 @@ if not getgenv().PlaceFileName then
     PlaceFileName = PlaceFileName:gsub("[^%a]", "")
     getgenv().PlaceFileName = PlaceFileName
 end
-
--- Version Check System
-task.spawn(function()
-    if ScriptVersion:sub(1, 1) == "v" then
-        local PlaceFileName = getgenv().PlaceFileName
-
-        local File = string.format(
-            "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
-            PlaceFileName
-        )
-
-        while task.wait(60) do
-            local success, Result = pcall(function()
-                return game:HttpGet(File)
-            end)
-
-            if not success or not Result then
-                warn("Failed to fetch the latest version. Retrying in 60 seconds...")
-                continue
-            end
-
-            local splitResult = Result:split('getgenv().ScriptVersion = "')
-            if not splitResult[2] then
-                continue
-            end
-
-            local versionMatch = splitResult[2]:split('"')[1]
-            if not versionMatch or versionMatch == "" then
-                continue
-            end
-
-            -- Compare versions using semantic versioning
-            if compareVersions(ScriptVersion, versionMatch) >= 0 then
-                continue
-            end
-
-            -- Show animated update notification
-            CreateUpdateNotification(ScriptVersion, versionMatch)
-            break
-        end
-    end
-end)
 
 local VirtualUser = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
