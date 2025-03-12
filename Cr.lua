@@ -27,6 +27,31 @@ end
 
 local ScriptVersion = getgenv().ScriptVersion
 
+-- Function to compare version numbers
+local function compareVersions(v1, v2)
+    -- Remove 'v' prefix if exists
+    v1 = v1:gsub("^v", "")
+    v2 = v2:gsub("^v", "")
+    
+    -- Split versions into parts
+    local v1Parts = v1:split(".")
+    local v2Parts = v2:split(".")
+    
+    -- Compare each part
+    for i = 1, math.max(#v1Parts, #v2Parts) do
+        local v1Part = tonumber(v1Parts[i]) or 0
+        local v2Part = tonumber(v2Parts[i]) or 0
+        
+        if v1Part < v2Part then
+            return -1
+        elseif v1Part > v2Part then
+            return 1
+        end
+    end
+    
+    return 0
+end
+
 -- Create update notification GUI function
 local function CreateUpdateNotification(currentVersion, newVersion)
     -- Create ScreenGui
@@ -372,7 +397,8 @@ task.spawn(function()
                 continue
             end
 
-            if versionMatch == ScriptVersion then
+            -- Compare versions using semantic versioning
+            if compareVersions(ScriptVersion, versionMatch) >= 0 then
                 continue
             end
 
