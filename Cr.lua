@@ -167,24 +167,31 @@ end
 task.spawn(function()
     if ScriptVersion:sub(1, 1) == "v" then
         local PlaceFileName = getgenv().PlaceFileName
-
         local BindableFunction = Instance.new("BindableFunction")
 
         local Response = false
-
         local Button1 = "🔄 Update Now" 
         local Button2 = "⏳ Later"
 
-        local File = `https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/{PlaceFileName}.lua`
+        local File = string.format(
+            "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
+            PlaceFileName
+        )
 
-        BindableFunction.OnInvoke = function(Button: string)
+        BindableFunction.OnInvoke = function(Button)
             Response = true
 
             if Button == Button1 then
                 Notify("Updating Xenon", "Installing the latest version...", "rocket")
                 task.wait(1)
-                loadstring(game:HttpGet(File))()
-                Notify("Update Complete", "Xenon has been updated successfully!", "check")
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet(File))()
+                end)
+                if not success then
+                    Notify("Update Failed", "Error: " .. tostring(err), "x")
+                else
+                    Notify("Update Complete", "Xenon has been updated successfully!", "check")
+                end
             end
         end
 
@@ -194,12 +201,18 @@ task.spawn(function()
             end)
 
             if not success or not Result then
+                warn("Failed to fetch the latest version. Retrying in 60 seconds...")
                 continue
             end
 
-            local versionMatch = 			Result = Result:split('getgenv().ScriptVersion = "')[2]
-			Result = Result:split('"')[1]
-            if not versionMatch then
+            -- Menggunakan split untuk mendapatkan versi dari script
+            local splitResult = Result:split('getgenv().ScriptVersion = "')
+            if not splitResult[2] then
+                continue
+            end
+
+            local versionMatch = splitResult[2]:split('"')[1]
+            if not versionMatch or versionMatch == "" then
                 continue
             end
 
@@ -219,7 +232,7 @@ task.spawn(function()
 
             SendNotification(
                 "Xenon Update",
-                `New version {versionMatch} available!`,
+                string.format("New version %s available!", versionMatch),
                 math.huge,
                 Button1,
                 Button2,
@@ -230,6 +243,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 local VirtualUser = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
