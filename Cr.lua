@@ -27,33 +27,6 @@ end
 
 local ScriptVersion = getgenv().ScriptVersion
 
--- Function to compare version numbers
-local function compareVersions(v1, v2)
-    if not v1 or not v2 then return 0 end
-    
-    -- Remove 'v' prefix if exists
-    v1 = tostring(v1):gsub("^v", "")
-    v2 = tostring(v2):gsub("^v", "")
-    
-    -- Split versions into parts
-    local v1Parts = v1:split(".")
-    local v2Parts = v2:split(".")
-    
-    -- Compare each part
-    for i = 1, math.max(#v1Parts, #v2Parts) do
-        local v1Part = tonumber(v1Parts[i]) or 0
-        local v2Part = tonumber(v2Parts[i]) or 0
-        
-        if v1Part < v2Part then
-            return -1
-        elseif v1Part > v2Part then
-            return 1
-        end
-    end
-    
-    return 0
-end
-
 -- Create update notification GUI function
 local function CreateUpdateNotification(currentVersion, newVersion, isDowngrade, changelog)
     -- Create ScreenGui
@@ -274,54 +247,81 @@ local function CreateUpdateNotification(currentVersion, newVersion, isDowngrade,
     return UpdateGui
 end
 
+-- Function to compare version numbers
+local function compareVersions(v1, v2)
+    if not v1 or not v2 then return 0 end
+    
+    -- Remove 'v' prefix if exists
+    v1 = tostring(v1):gsub("^v", "")
+    v2 = tostring(v2):gsub("^v", "")
+    
+    -- Split versions into parts
+    local v1Parts = v1:split(".")
+    local v2Parts = v2:split(".")
+    
+    -- Compare each part
+    for i = 1, math.max(#v1Parts, #v2Parts) do
+        local v1Part = tonumber(v1Parts[i]) or 0
+        local v2Part = tonumber(v2Parts[i]) or 0
+        
+        if v1Part < v2Part then
+            return -1
+        elseif v1Part > v2Part then
+            return 1
+        end
+    end
+    
+    return 0
+end
+
 -- Version Check System
 task.spawn(function()
     if ScriptVersion and ScriptVersion:sub(1, 1) == "v" and getgenv().PlaceFileName then
-        -- Dapatkan URL file game dari repo
+        -- Get game file URL from repo
         local rawUrl = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
             getgenv().PlaceFileName
         )
 
-        -- Fungsi untuk mengecek versi
+        -- Function to check version
         local function checkVersion()
             local success, result = pcall(function()
                 return game:HttpGet(rawUrl)
             end)
 
             if not success or not result then
-                warn("[Version Check] Gagal mengambil versi:", tostring(result))
+                warn("[Version Check] Failed to fetch version:", tostring(result))
                 return
             end
 
-            -- Ekstrak versi dari skrip dengan regex yang lebih akurat
+            -- Extract version from script with more accurate regex
             local versionMatch = result:match('getgenv%(%).ScriptVersion%s*=%s*"v([%d%.]+)"')
 
             if not versionMatch then
-                warn("[Version Check] Gagal menemukan versi dalam skrip!")
+                warn("[Version Check] Failed to find version in script!")
                 return
             end
 
-            -- Bersihkan hasilnya
+            -- Clean the result
             versionMatch = "v" .. versionMatch:gsub("[^%d%.]", "")
 
-            -- Ekstrak changelog
+            -- Extract changelog
             local changelog = result:match('getgenv%(%).Changelog%s*=%s*%[%[([^%]]+)%]%]')
             if not changelog then
-                changelog = "Tidak ada changelog tersedia."
+                changelog = "No changelog available."
             end
 
-            -- Bandingkan versi saat ini dengan versi yang tersedia
+            -- Compare current version with available version
             local comparison = compareVersions(ScriptVersion, versionMatch)
             
             if comparison < 0 then
-                -- Ada update baru
-                print("[Version Check] Update tersedia:", ScriptVersion, "->", versionMatch)
+                -- New update available
+                print("[Version Check] Update available:", ScriptVersion, "->", versionMatch)
                 CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog)
                 return true
             elseif comparison > 0 then
-                -- Versi lebih tinggi dari yang diperlukan
-                print("[Version Check] Versi tidak cocok:", ScriptVersion, "->", versionMatch)
+                -- Version higher than required
+                print("[Version Check] Version mismatch:", ScriptVersion, "->", versionMatch)
                 CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog)
                 return true
             end
@@ -329,17 +329,15 @@ task.spawn(function()
             return false
         end
 
-        -- Cek versi pertama kali
+        -- Check version first time
         if checkVersion() then return end
 
-        -- Cek ulang setiap 30 detik
+        -- Recheck every 30 seconds
         while task.wait(30) do
             if checkVersion() then break end
         end
     end
 end)
-
-
 
 getgenv().gethui = function()
     return game:GetService("CoreGui")
@@ -616,7 +614,7 @@ local function GetGameChangelog()
     end)
 
     if success and Result then
-        local changelogStart = Result:find('getgenv().Changelog = %[%[')
+        local changelogStart = Result:find('getgenv%(%).Changelog%s*=%s*%[%[')
         if changelogStart then
             local changelogEnd = Result:find('%]%]', changelogStart)
             if changelogEnd then
