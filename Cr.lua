@@ -277,67 +277,68 @@ end
 -- Version Check System
 task.spawn(function()
     if ScriptVersion and ScriptVersion:sub(1, 1) == "v" and getgenv().PlaceFileName then
-        -- Get the raw URL for the game script
+        -- Dapatkan URL file game dari repo
         local rawUrl = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
             getgenv().PlaceFileName
         )
 
+        -- Fungsi untuk mengecek versi
         local function checkVersion()
             local success, result = pcall(function()
                 return game:HttpGet(rawUrl)
             end)
 
             if not success or not result then
-                warn("[Version Check] Failed to fetch version:", tostring(result))
+                warn("[Version Check] Gagal mengambil versi:", tostring(result))
                 return
             end
 
-            -- Extract version from the script with improved pattern matching
-            local versionMatch = result:match('getgenv().ScriptVersion = "'')
-            local changelog = nil
-            
+            -- Ekstrak versi dari skrip dengan regex yang lebih akurat
+            local versionMatch = result:match('getgenv%(%).ScriptVersion%s*=%s*"v([%d%.]+)"')
+
             if not versionMatch then
-                warn("[Version Check] Failed to extract version from script")
+                warn("[Version Check] Gagal menemukan versi dalam skrip!")
                 return
             end
 
-            -- Extract changelog
-            local changelogStart = result:find('getgenv().Changelog = %[%[')
-            if changelogStart then
-                local changelogEnd = result:find('%]%]', changelogStart)
-                if changelogEnd then
-                    changelog = result:sub(changelogStart + 23, changelogEnd - 1)
-                end
+            -- Bersihkan hasilnya
+            versionMatch = "v" .. versionMatch:gsub("[^%d%.]", "")
+
+            -- Ekstrak changelog
+            local changelog = result:match('getgenv%(%).Changelog%s*=%s*%[%[([^%]]+)%]%]')
+            if not changelog then
+                changelog = "Tidak ada changelog tersedia."
             end
 
-            -- Compare versions
+            -- Bandingkan versi saat ini dengan versi yang tersedia
             local comparison = compareVersions(ScriptVersion, versionMatch)
             
             if comparison < 0 then
-                -- Update available (current version is lower than available version)
-                print("[Version Check] Update available:", ScriptVersion, "->", versionMatch)
-                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog or "No changelog available")
+                -- Ada update baru
+                print("[Version Check] Update tersedia:", ScriptVersion, "->", versionMatch)
+                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog)
                 return true
             elseif comparison > 0 then
-                -- Current version is higher than required (downgrade needed)
-                print("[Version Check] Version mismatch:", ScriptVersion, "->", versionMatch)
-                CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog or "No changelog available")
+                -- Versi lebih tinggi dari yang diperlukan
+                print("[Version Check] Versi tidak cocok:", ScriptVersion, "->", versionMatch)
+                CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog)
                 return true
             end
-            
+
             return false
         end
 
-        -- Initial check
+        -- Cek versi pertama kali
         if checkVersion() then return end
 
-        -- Periodic check every 30 seconds
+        -- Cek ulang setiap 30 detik
         while task.wait(30) do
             if checkVersion() then break end
         end
     end
 end)
+
 
 
 getgenv().gethui = function()
