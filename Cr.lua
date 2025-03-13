@@ -303,7 +303,7 @@ task.spawn(function()
             end
 
             -- Extract changelog
-            local changelogStart = result:find('getgenv%(%)[^%[]*Changelog%s*=%s*%[%[')
+            local changelogStart = result:find('getgenv().Changelog = %[%[')
             if changelogStart then
                 local changelogEnd = result:find('%]%]', changelogStart)
                 if changelogEnd then
