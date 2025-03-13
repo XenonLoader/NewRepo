@@ -283,36 +283,27 @@ task.spawn(function()
             getgenv().PlaceFileName
         )
 
-        while task.wait(30) do -- Check every 30 seconds
+        local function checkVersion()
             local success, result = pcall(function()
                 return game:HttpGet(rawUrl)
             end)
 
             if not success or not result then
-                warn("Failed to fetch version. Retrying in 30 seconds...")
-                continue
+                warn("[Version Check] Failed to fetch version:", tostring(result))
+                return
             end
 
-            -- Extract version from the script
-            local versionMatch = nil
+            -- Extract version from the script with improved pattern matching
+            local versionMatch = result:match('getgenv%(%)[^"]*ScriptVersion%s*=%s*"(v[%d%.]+)"')
             local changelog = nil
             
-            -- Find version in the script
-            local versionStart = result:find('getgenv().ScriptVersion = "')
-            if versionStart then
-                local versionEnd = result:find('"', versionStart + 27)
-                if versionEnd then
-                    versionMatch = result:sub(versionStart + 27, versionEnd - 1)
-                end
-            end
-
             if not versionMatch then
-                warn("Failed to extract version. Retrying in 30 seconds...")
-                continue
+                warn("[Version Check] Failed to extract version from script")
+                return
             end
 
             -- Extract changelog
-            local changelogStart = result:find('getgenv().Changelog = %[%[')
+            local changelogStart = result:find('getgenv%(%)[^%[]*Changelog%s*=%s*%[%[')
             if changelogStart then
                 local changelogEnd = result:find('%]%]', changelogStart)
                 if changelogEnd then
@@ -323,21 +314,31 @@ task.spawn(function()
             -- Compare versions
             local comparison = compareVersions(ScriptVersion, versionMatch)
             
-            if comparison == 0 then
-                -- Versions are equal, continue checking
-                continue
+            if comparison < 0 then
+                -- Update available (current version is lower than available version)
+                print("[Version Check] Update available:", ScriptVersion, "->", versionMatch)
+                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog or "No changelog available")
+                return true
             elseif comparison > 0 then
                 -- Current version is higher than required (downgrade needed)
+                print("[Version Check] Version mismatch:", ScriptVersion, "->", versionMatch)
                 CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog or "No changelog available")
-                break
-            else
-                -- Update available
-                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog or "No changelog available")
-                break
+                return true
             end
+            
+            return false
+        end
+
+        -- Initial check
+        if checkVersion() then return end
+
+        -- Periodic check every 30 seconds
+        while task.wait(30) do
+            if checkVersion() then break end
         end
     end
 end)
+
 
 getgenv().gethui = function()
     return game:GetService("CoreGui")
