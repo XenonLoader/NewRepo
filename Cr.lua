@@ -275,41 +275,46 @@ end
 -- Version Check System
 task.spawn(function()
     if ScriptVersion:sub(1, 1) == "v" then
-        local PlaceFileName = getgenv().PlaceFileName
-
-        local File = string.format(
+        -- Get the raw URL for the game script
+        local rawUrl = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
-            PlaceFileName
+            getgenv().PlaceFileName
         )
 
         while task.wait(30) do -- Check every 30 seconds
-            local success, Result = pcall(function()
-                return game:HttpGet(File)
+            local success, result = pcall(function()
+                return game:HttpGet(rawUrl)
             end)
 
-            if not success or not Result then
+            if not success or not result then
                 warn("Failed to fetch version. Retrying in 30 seconds...")
                 continue
             end
 
-            -- Extract version
-            local splitResult = Result:split('getgenv().ScriptVersion = "')
-            if not splitResult[2] then
-                continue
+            -- Extract version from the script
+            local versionMatch = nil
+            local changelog = nil
+            
+            -- Find version in the script
+            local versionStart = result:find('getgenv().ScriptVersion = "')
+            if versionStart then
+                local versionEnd = result:find('"', versionStart + 27)
+                if versionEnd then
+                    versionMatch = result:sub(versionStart + 27, versionEnd - 1)
+                end
             end
 
-            local versionMatch = splitResult[2]:split('"')[1]
-            if not versionMatch or versionMatch == "" then
+            if not versionMatch then
+                warn("Failed to extract version. Retrying in 30 seconds...")
                 continue
             end
 
             -- Extract changelog
-            local changelog = ""
-            local changelogStart = Result:find('getgenv().Changelog = %[%[')
+            local changelogStart = result:find('getgenv().Changelog = %[%[')
             if changelogStart then
-                local changelogEnd = Result:find('%]%]', changelogStart)
+                local changelogEnd = result:find('%]%]', changelogStart)
                 if changelogEnd then
-                    changelog = Result:sub(changelogStart + 23, changelogEnd - 1)
+                    changelog = result:sub(changelogStart + 23, changelogEnd - 1)
                 end
             end
 
@@ -321,11 +326,11 @@ task.spawn(function()
                 continue
             elseif comparison > 0 then
                 -- Current version is higher than required (downgrade needed)
-                CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog)
+                CreateUpdateNotification(ScriptVersion, versionMatch, true, changelog or "No changelog available")
                 break
             else
                 -- Update available
-                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog)
+                CreateUpdateNotification(ScriptVersion, versionMatch, false, changelog or "No changelog available")
                 break
             end
         end
