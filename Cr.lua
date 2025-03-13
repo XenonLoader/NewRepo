@@ -29,9 +29,11 @@ local ScriptVersion = getgenv().ScriptVersion
 
 -- Function to compare version numbers
 local function compareVersions(v1, v2)
+    if not v1 or not v2 then return 0 end
+    
     -- Remove 'v' prefix if exists
-    v1 = v1:gsub("^v", "")
-    v2 = v2:gsub("^v", "")
+    v1 = tostring(v1):gsub("^v", "")
+    v2 = tostring(v2):gsub("^v", "")
     
     -- Split versions into parts
     local v1Parts = v1:split(".")
@@ -274,7 +276,7 @@ end
 
 -- Version Check System
 task.spawn(function()
-    if ScriptVersion:sub(1, 1) == "v" then
+    if ScriptVersion and ScriptVersion:sub(1, 1) == "v" and getgenv().PlaceFileName then
         -- Get the raw URL for the game script
         local rawUrl = string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
@@ -394,7 +396,9 @@ end
 if not firesignal and getconnections then
     firesignal = function(Signal: RBXScriptSignal)
         local Connections = getconnections(Signal)
-        Connections[#Connections]:Fire()
+        if #Connections > 0 then
+            Connections[#Connections]:Fire()
+        end
     end
 end
 
@@ -597,10 +601,15 @@ Tab:CreateSection("📝 Changelog")
 
 -- Fetch changelog from game file
 local function GetGameChangelog()
+    -- Check if PlaceFileName exists
+    if not getgenv().PlaceFileName then
+        return "• Changelog not available - Place file name not found"
+    end
+
     local success, Result = pcall(function()
         return game:HttpGet(string.format(
             "https://raw.githubusercontent.com/XenonLoader/asdasdasd/refs/heads/main/Games/%s.lua",
-            getgenv().PlaceFileName
+            tostring(getgenv().PlaceFileName) -- Ensure string conversion
         ))
     end)
 
@@ -616,7 +625,15 @@ local function GetGameChangelog()
     return "• Changelog not available"
 end
 
-Tab:CreateParagraph({Title = `{PlaceName} {ScriptVersion}`, Content = GetGameChangelog()})
+-- Create changelog paragraph with nil checks
+Tab:CreateParagraph({
+    Title = string.format(
+        "%s %s",
+        tostring(PlaceName or "Unknown Place"),
+        tostring(ScriptVersion or "Unknown Version")
+    ),
+    Content = GetGameChangelog()
+})
 
 getgenv().CreateFeature = function(Tab: Tab, FeatureName: string)
     if not Features[FeatureName] then
