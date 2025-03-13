@@ -294,7 +294,7 @@ task.spawn(function()
             end
 
             -- Extract version from the script with improved pattern matching
-            local versionMatch = result:match('getgenv%(%)[^"]*ScriptVersion%s*=%s*"(v[%d%.]+)"')
+            local versionMatch = result:match('getgenv().ScriptVersion = "'')
             local changelog = nil
             
             if not versionMatch then
