@@ -529,6 +529,23 @@ Tab:CreateSection("📊 Performance")
 
 local Stats = game:GetService("Stats")
 local RunService = game:GetService("RunService")
+local Connections = {}
+
+local function HandleConnection(name, connection)
+    if Connections[name] then
+        Connections[name]:Disconnect()
+    end
+    Connections[name] = connection
+end
+
+local function CleanupConnections()
+    for name, connection in pairs(Connections) do
+        if connection.Connected then
+            connection:Disconnect()
+        end
+    end
+    table.clear(Connections)
+end
 
 -- Performance Labels
 local PingLabel = Tab:CreateLabel("Ping: 0 ms", "activity")
@@ -539,6 +556,25 @@ local PlayersLabel = Tab:CreateLabel("Players: 0/0", "users")
 local UptimeLabel = Tab:CreateLabel("Uptime: 0m 0s", "timer")
 local CPULabel = Tab:CreateLabel("CPU Usage: 0%", "cpu")
 local GraphicsLabel = Tab:CreateLabel("Graphics: Level 0", "layers")
+local ConnectionStatus = StatusTab:CreateLabel("🟢 All Systems Operational", "wifi")
+local LastUpdateStatus = StatusTab:CreateLabel("Last Update: Never", "clock")
+local ActiveConnectionsStatus = StatusTab:CreateLabel("Active Connections: 0", "link")
+
+-- Update Status Function
+local function UpdateStatus()
+    local activeConnections = 0
+    for _, conn in pairs(Connections) do
+        if conn.Connected then
+            activeConnections += 1
+        end
+    end
+    
+    ActiveConnectionsStatus:Set(`Active Connections: {activeConnections}`)
+    LastUpdateStatus:Set(`Last Update: {os.date("%X")}`)
+    
+    local allOperational = activeConnections == #Connections
+    ConnectionStatus:Set(allOperational and "🟢 All Systems Operational" or "🟡 Partial Connection")
+end
 
 -- Format memory size
 local function FormatMemory(memory)
@@ -668,5 +704,12 @@ local XenonStarted = getgenv().XenonStarted
 if XenonStarted then
     XenonStarted()
 end
+
+HandleConnection("StatusUpdate", RunService.Heartbeat:Connect(function()
+    UpdateStatus()
+end))
+
+-- Cleanup on script stop
+Player.CharacterRemoving:Connect(CleanupConnections)
 
 return true
